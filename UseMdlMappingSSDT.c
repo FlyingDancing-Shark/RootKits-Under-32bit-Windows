@@ -1,3 +1,9 @@
+/********************************************
+description
+
+
+
+********************************************/
 #include <ntddk.h>
 #include "datatype.h"
 #include "dbgmsg.h"
@@ -5,11 +11,11 @@
 #include "device.h"
 
 #define ETHREAD_OFFSET_SERVICE_TABLE				0xbc
-//Ê¹ÓÃ build  /D /g /b /B /e /F /S /s /$ /why /v /w /y  ÃüÁî±àÒë¸ÃÇı¶¯Ô´ÎÄ¼ş
-//¿ÉÒÔ²éÕÒ²¢Ñ§Ï° WRK Ô´ÂëÖĞËùÓĞ¶Ô Mdl  API Ïà¹ØµÄÕıÈ·ÓÃ·¨
+//ä½¿ç”¨ build  /D /g /b /B /e /F /S /s /$ /why /v /w /y  å‘½ä»¤ç¼–è¯‘è¯¥é©±åŠ¨æºæ–‡ä»¶
+//å¯ä»¥æŸ¥æ‰¾å¹¶å­¦ä¹  WRK æºç ä¸­æ‰€æœ‰å¯¹ Mdl  API ç›¸å…³çš„æ­£ç¡®ç”¨æ³•
 
 /*
-MDL ½á¹¹¶¨ÒåÔÚ WRK Ô´ÂëµÄ ntosdef.h Í·ÎÄ¼şÖĞ
+MDL ç»“æ„å®šä¹‰åœ¨ WRK æºç çš„ ntosdef.h å¤´æ–‡ä»¶ä¸­
 
 Define a Memory Descriptor List (MDL)
 
@@ -30,48 +36,48 @@ address of a buffer mapped by an MDL may be referenced using the following:
 
 PMDL  mdl_ptr;
 
-//MmProbeAndLockPages() ÔÚ·µ»ØÇ°»á°Ñ´«¸øËüµÄ MDL Ö¸ÕëÉè¶¨³É NULL£¬ËùÒÔÔÚµ÷ÓÃËüÇ°½øĞĞ±¸·İ£¡
+//MmProbeAndLockPages() åœ¨è¿”å›å‰ä¼šæŠŠä¼ ç»™å®ƒçš„ MDL æŒ‡é’ˆè®¾å®šæˆ NULLï¼Œæ‰€ä»¥åœ¨è°ƒç”¨å®ƒå‰è¿›è¡Œå¤‡ä»½ï¼
 PMDL  backup_mdl_ptr;
 
-// Ò»Ã¶Ö¸Õë£¬ÓÃÀ´´æ´¢Ò»¶ÎĞéÄâµØÖ·£¬¸ÃµØÖ·´¦µÄÄÚÈİÊÇ PFN_NUMBER£¨½ô¸úÔÚ MDL ½á¹¹ºóÃæµÄÎïÀíÒ³¿òºÅ£©
+// ä¸€æšæŒ‡é’ˆï¼Œç”¨æ¥å­˜å‚¨ä¸€æ®µè™šæ‹Ÿåœ°å€ï¼Œè¯¥åœ°å€å¤„çš„å†…å®¹æ˜¯ PFN_NUMBERï¼ˆç´§è·Ÿåœ¨ MDL ç»“æ„åé¢çš„ç‰©ç†é¡µæ¡†å·ï¼‰
 PPFN_NUMBER  pfn_array_follow_mdl;
 
 short  mdl_header_length = sizeof(MDL);
 
 DWORD*  mapped_ki_service_table;
 
-/* os_SSDT_ptr ÆäÊµ¾ÍÊÇ KTHREAD ½á¹¹µÄ ServiceTable ×Ö¶Î£¬ËüÖ¸Ïò SSDT µÄµØÖ·£¨´æ´¢ÔÚÈ«¾Ö±äÁ¿ os_SSDT ÖĞ£©£»
-£¬Òª»ñµÃ SSDT µÄµØÖ·£¬ÔÚ kd.exe ÖĞÒÔÃüÁî dd ×ª´¢ os_SSDT_ptr£¬ÆäÄÚÈİÓ¦¸Ã¾ÍÊÇ SSDT 
-µÄµØÖ·£¬ËüÓë dt nt!*DescriptorTable* -v ÃüÁîÊä³öµÄµÚÒ»ÏîµØÖ·Æ¥Åä£¬Èç¹ûÔÙÒÔÃüÁî dd ×ª´¢ SSDT£¬ÔòµÃµ½
-ÏµÍ³·şÎñ±íµÄµØÖ·£¨´æ´¢ÔÚÈ«¾Ö±äÁ¿ os_ki_service_table ÖĞ£©£¬ËüÓëÄÚºË±äÁ¿ KiServiceTable µÄÖµÏàÍ¬£»ÔÙÒÔ dd/dps ×ª´¢
-KiServiceTable/os_ki_service_table£¬ÔòµÃµ½±íÖĞµÄÏµÍ³·şÎñÀı³ÌµÄµØÖ·/º¯ÊıÃû£»
+/* os_SSDT_ptr å…¶å®å°±æ˜¯ KTHREAD ç»“æ„çš„ ServiceTable å­—æ®µï¼Œå®ƒæŒ‡å‘ SSDT çš„åœ°å€ï¼ˆå­˜å‚¨åœ¨å…¨å±€å˜é‡ os_SSDT ä¸­ï¼‰ï¼›
+ï¼Œè¦è·å¾— SSDT çš„åœ°å€ï¼Œåœ¨ kd.exe ä¸­ä»¥å‘½ä»¤ dd è½¬å‚¨ os_SSDT_ptrï¼Œå…¶å†…å®¹åº”è¯¥å°±æ˜¯ SSDT 
+çš„åœ°å€ï¼Œå®ƒä¸ dt nt!*DescriptorTable* -v å‘½ä»¤è¾“å‡ºçš„ç¬¬ä¸€é¡¹åœ°å€åŒ¹é…ï¼Œå¦‚æœå†ä»¥å‘½ä»¤ dd è½¬å‚¨ SSDTï¼Œåˆ™å¾—åˆ°
+ç³»ç»ŸæœåŠ¡è¡¨çš„åœ°å€ï¼ˆå­˜å‚¨åœ¨å…¨å±€å˜é‡ os_ki_service_table ä¸­ï¼‰ï¼Œå®ƒä¸å†…æ ¸å˜é‡ KiServiceTable çš„å€¼ç›¸åŒï¼›å†ä»¥ dd/dps è½¬å‚¨
+KiServiceTable/os_ki_service_tableï¼Œåˆ™å¾—åˆ°è¡¨ä¸­çš„ç³»ç»ŸæœåŠ¡ä¾‹ç¨‹çš„åœ°å€/å‡½æ•°åï¼›
 
-kd.exe Êä³ö
-SSDT_ptr£¨KTHREAD.ServiceTable ³ÉÔ±µØÖ·£©£º0x
-SSDT£º0x
-KiServiceTable£º0x
+kd.exe è¾“å‡º
+SSDT_ptrï¼ˆKTHREAD.ServiceTable æˆå‘˜åœ°å€ï¼‰ï¼š0x
+SSDTï¼š0x
+KiServiceTableï¼š0x
 
-Çı¶¯´òÓ¡Êä³ö
-os_SSDT_ptr£º0x £¨Çı¶¯ÄÚÔËĞĞµÄµ±Ç°Ïß³ÌµÄ KTHREAD.ServiceTable ³ÉÔ±µØÖ·£¬Í¬ÑùÖ¸Ïò £©
-os_SSDT£º0x
-mapped_addr£¨Mdl °Ñ os_SSDT_ptr Ó³Éäµ½µÄµØÖ·£©£º
-os_ki_service_table£º
+é©±åŠ¨æ‰“å°è¾“å‡º
+os_SSDT_ptrï¼š0x ï¼ˆé©±åŠ¨å†…è¿è¡Œçš„å½“å‰çº¿ç¨‹çš„ KTHREAD.ServiceTable æˆå‘˜åœ°å€ï¼ŒåŒæ ·æŒ‡å‘ ï¼‰
+os_SSDTï¼š0x
+mapped_addrï¼ˆMdl æŠŠ os_SSDT_ptr æ˜ å°„åˆ°çš„åœ°å€ï¼‰ï¼š
+os_ki_service_tableï¼š
 
-Í¨¹ı kd.exe µÄÄÚºËµØÖ·À©Õ¹Ö¸Áî !cmkd.kvas ·ÖÎöµÃÖª£¬KTHREAD.ServiceTable ³ÉÔ±Î»ÓÚ²»¿É»»Ò³³Ø£»
-ÏµÍ³·şÎñÃèÊö·û±í£¨SSDT£©£¬ÒÔ¼°ÏµÍ³·şÎñÀı³ÌÖ¸Õë±í£¨¼´ KiServiceTable£©Î»ÓÚ BootLoaded ÀàĞÍµÄÄÚºË¿Õ¼ä£¨¶ÔÓ¦µÄÃ¶¾ÙÀàĞÍÎª 
-MiVaBootLoaded£©ÔÚÏµÍ³³õÊ¼»¯½×¶Î£¬µ±¿ØÖÆÈ¨×ª½»ÄÚºËÊ±£¬Ëü»á°Ñ winload.exe Ó³Éäµ½´ËÀàÄÚºË¿Õ¼ä£¬
-ÖÁÓÚÎªºÎÒªÔÚ´ËÀàÄÚºË¿Õ¼äÖĞ¹¹½¨ SSDT ºÍ KiServiceTable£¬ÆäÒâÍ¼ÉĞ´ı·ÖÎö
+é€šè¿‡ kd.exe çš„å†…æ ¸åœ°å€æ‰©å±•æŒ‡ä»¤ !cmkd.kvas åˆ†æå¾—çŸ¥ï¼ŒKTHREAD.ServiceTable æˆå‘˜ä½äºä¸å¯æ¢é¡µæ± ï¼›
+ç³»ç»ŸæœåŠ¡æè¿°ç¬¦è¡¨ï¼ˆSSDTï¼‰ï¼Œä»¥åŠç³»ç»ŸæœåŠ¡ä¾‹ç¨‹æŒ‡é’ˆè¡¨ï¼ˆå³ KiServiceTableï¼‰ä½äº BootLoaded ç±»å‹çš„å†…æ ¸ç©ºé—´ï¼ˆå¯¹åº”çš„æšä¸¾ç±»å‹ä¸º 
+MiVaBootLoadedï¼‰åœ¨ç³»ç»Ÿåˆå§‹åŒ–é˜¶æ®µï¼Œå½“æ§åˆ¶æƒè½¬äº¤å†…æ ¸æ—¶ï¼Œå®ƒä¼šæŠŠ winload.exe æ˜ å°„åˆ°æ­¤ç±»å†…æ ¸ç©ºé—´ï¼Œ
+è‡³äºä¸ºä½•è¦åœ¨æ­¤ç±»å†…æ ¸ç©ºé—´ä¸­æ„å»º SSDT å’Œ KiServiceTableï¼Œå…¶æ„å›¾å°šå¾…åˆ†æ
 
-MDL °Ñ KTHREAD.ServiceTable ³ÉÔ±£¨Ö¸Ïò SSDT£©Ó³Éäµ½µÄÄÚºË¿Õ¼äÊôÓÚ SystemPte£¬¼´ÏµÍ³Ò³±íÌõÄ¿£¬´ËÀàÄÚºË¿Õ¼äÓĞ¶àÖÖÓÃÍ¾£¬
-°üÀ¨Ìá¹©¸ø MDL À´°Ñ SSDT/KiServiceTable Ó³Éäµ½´Ë´¦¡£
-ÏµÍ³Ò³±íÌõÄ¿£¨PTEs£©ÄÚºË¿Õ¼ä£¬ÓÃÓÚ¶¯Ì¬µØÓ³ÉäÏµÍ³Ò³Ãæ£¬ÀıÈç I/O ¿Õ¼ä£¬ÄÚºËÕ»£¬ÒÔ¼°Ó³ÉäÄÚ´æÃèÊö·ûÁĞ±í£¨MDLs£©¡£
-ÏµÍ³ PTE µÄ·ÖÅäÕß³ıÁË¸÷ÖÖÖ´ĞĞÌå/ÄÚºË×é¼şÍâ£¬¶àÊıÊÇÒ»Ğ©¼ÓÔØµ½ÄÚºË¿Õ¼äµÄÉè±¸Çı¶¯³ÌĞò£¬ÆäÖĞÓĞÏµÍ³×Ô´øµÄ£¬Ò²ÓĞµÚÈı·½ÈíÓ²¼ş¹©Ó¦ÉÌ¿ª·¢µÄ£»
-ËüÃÇÇëÇóÔÚÏµÍ³ PTE ÇøÓòÖĞ·ÖÅäÄÚ´æµÄÄ¿µÄ¶¼ÊÇÓëÓ³ÉäÊÓÍ¼£¬MDLs£¨ÄÚ´æÃèÊö·ûÁĞ±í£©£¬ÊÊÅäÆ÷ÄÚ´æÓ³Éä£¬Çı¶¯³ÌĞòÓ³Ïñ£¬
-ÄÚºËÕ»£¬ I/O Ó³ÉäµÈÏà¹ØµÄ¡£
-ÀıÈç£¬MiFindContiguousMemory() -> MmMapIoSpace() -> MiInsertIoSpaceMap -> ExAllocatePoolWithTag() -> 
+MDL æŠŠ KTHREAD.ServiceTable æˆå‘˜ï¼ˆæŒ‡å‘ SSDTï¼‰æ˜ å°„åˆ°çš„å†…æ ¸ç©ºé—´å±äº SystemPteï¼Œå³ç³»ç»Ÿé¡µè¡¨æ¡ç›®ï¼Œæ­¤ç±»å†…æ ¸ç©ºé—´æœ‰å¤šç§ç”¨é€”ï¼Œ
+åŒ…æ‹¬æä¾›ç»™ MDL æ¥æŠŠ SSDT/KiServiceTable æ˜ å°„åˆ°æ­¤å¤„ã€‚
+ç³»ç»Ÿé¡µè¡¨æ¡ç›®ï¼ˆPTEsï¼‰å†…æ ¸ç©ºé—´ï¼Œç”¨äºåŠ¨æ€åœ°æ˜ å°„ç³»ç»Ÿé¡µé¢ï¼Œä¾‹å¦‚ I/O ç©ºé—´ï¼Œå†…æ ¸æ ˆï¼Œä»¥åŠæ˜ å°„å†…å­˜æè¿°ç¬¦åˆ—è¡¨ï¼ˆMDLsï¼‰ã€‚
+ç³»ç»Ÿ PTE çš„åˆ†é…è€…é™¤äº†å„ç§æ‰§è¡Œä½“/å†…æ ¸ç»„ä»¶å¤–ï¼Œå¤šæ•°æ˜¯ä¸€äº›åŠ è½½åˆ°å†…æ ¸ç©ºé—´çš„è®¾å¤‡é©±åŠ¨ç¨‹åºï¼Œå…¶ä¸­æœ‰ç³»ç»Ÿè‡ªå¸¦çš„ï¼Œä¹Ÿæœ‰ç¬¬ä¸‰æ–¹è½¯ç¡¬ä»¶ä¾›åº”å•†å¼€å‘çš„ï¼›
+å®ƒä»¬è¯·æ±‚åœ¨ç³»ç»Ÿ PTE åŒºåŸŸä¸­åˆ†é…å†…å­˜çš„ç›®çš„éƒ½æ˜¯ä¸æ˜ å°„è§†å›¾ï¼ŒMDLsï¼ˆå†…å­˜æè¿°ç¬¦åˆ—è¡¨ï¼‰ï¼Œé€‚é…å™¨å†…å­˜æ˜ å°„ï¼Œé©±åŠ¨ç¨‹åºæ˜ åƒï¼Œ
+å†…æ ¸æ ˆï¼Œ I/O æ˜ å°„ç­‰ç›¸å…³çš„ã€‚
+ä¾‹å¦‚ï¼ŒMiFindContiguousMemory() -> MmMapIoSpace() -> MiInsertIoSpaceMap -> ExAllocatePoolWithTag() -> 
 MiAllocatePoolPages() -> MiAllocatePagedPoolPages() -> MiObtainSystemVa()
-ÓÉ´Ë¿ÉÖª£¬ÎŞÂÛÊÇÖ±½Ó»¹ÊÇ¼ä½Óµ÷ÓÃ MiObtainSystemVa() £¬À´ÔÚÏµÍ³ PTE ÇøÓò·ÖÅäÄÚ´æ£¬¶¼»á±»¸ú×Ù¼ÇÂ¼ÏÂÀ´
-£¨ÆôÓÃÏµÍ³ PTE ·ÖÅäÕß¸ú×Ùºó£©¡£
+ç”±æ­¤å¯çŸ¥ï¼Œæ— è®ºæ˜¯ç›´æ¥è¿˜æ˜¯é—´æ¥è°ƒç”¨ MiObtainSystemVa() ï¼Œæ¥åœ¨ç³»ç»Ÿ PTE åŒºåŸŸåˆ†é…å†…å­˜ï¼Œéƒ½ä¼šè¢«è·Ÿè¸ªè®°å½•ä¸‹æ¥
+ï¼ˆå¯ç”¨ç³»ç»Ÿ PTE åˆ†é…è€…è·Ÿè¸ªåï¼‰ã€‚
 
 
 
@@ -105,13 +111,13 @@ void**  os_SSDT_ptr;
 PVOID  MapMdl(PMDL  mdl_pointer, PVOID  VirtualAddress, ULONG  Length);
 void  UnMapMdl(PMDL  mdl_pointer, PVOID  baseaddr);
 
-//¶¯Ì¬Ğ¶ÔØºó£¬dps ×ª´¢ mapped_ki_service_table ±äÁ¿µÄÊä³öÓ¦¸Ã²»ÊÇÏµÍ³·şÎñÀı³ÌÁË 
+//åŠ¨æ€å¸è½½åï¼Œdps è½¬å‚¨ mapped_ki_service_table å˜é‡çš„è¾“å‡ºåº”è¯¥ä¸æ˜¯ç³»ç»ŸæœåŠ¡ä¾‹ç¨‹äº† 
 VOID Unload(PDRIVER_OBJECT driver)
 {
 
-	DBG_TRACE("OnUnload", "Ğ¶ÔØÇ°Ê×ÏÈÈ¡Ïû MDL ¶Ô KiServiceTable µÄÓ³Éä");
+	DBG_TRACE("OnUnload", "å¸è½½å‰é¦–å…ˆå–æ¶ˆ MDL å¯¹ KiServiceTable çš„æ˜ å°„");
 	UnMapMdl(mdl_ptr, mapped_ki_service_table);
-	DBG_TRACE("OnUnload",  "UseMdlMappingSSDT.sys ÒÑĞ¶ÔØ");
+	DBG_TRACE("OnUnload",  "UseMdlMappingSSDT.sys å·²å¸è½½");
 	return;
 
 }
@@ -133,34 +139,34 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT driver, PUNICODE_STRING reg_path)
 
 	os_ki_service_table = *(DWORD*)os_SSDT;
 
-	//Õâ¶Îµ÷ÓÃ»áµ¼ÖÂ bugcheck code Îª 0x000000BE£¬Òà¼´³¢ÊÔÏòÖ»¶ÁµÄÄÚºËµØÖ·Ğ´Èë£¬ÒòÎªÔ­Ê¼µÄ KiServiceTable ¾ÍÊÇÖ»¶ÁµÄ
+	//è¿™æ®µè°ƒç”¨ä¼šå¯¼è‡´ bugcheck code ä¸º 0x000000BEï¼Œäº¦å³å°è¯•å‘åªè¯»çš„å†…æ ¸åœ°å€å†™å…¥ï¼Œå› ä¸ºåŸå§‹çš„ KiServiceTable å°±æ˜¯åªè¯»çš„
 	//RtlFillMemory((DWORD*)os_ki_service_table, 0x4, (UCHAR)'A');
 
-	//ÏÂÃæµ÷ÓÃµÄµÚ¶ş¸ö²ÎÊı£¬¸ù¾İÇ°Ãæ»ñÈ¡µ½µÄÊÇ SSDT Ö¸Õë£¬SSDT£¬»¹ÊÇ KiServiceTable£¬À´´«ÈëÏàÓ¦µÄÊµ²Î
-	// ´Ë´¦°Ñ KiServiceTable£¬ÒÔ¼°ÏµÍ³·şÎñÖ¸Õë±í£¬ÓÉ os_ki_service_table ±äÁ¿±£´æ£¬Ó³Éäµ½ÁíÒ»¸öÄÚºËµØÖ·´¦
+	//ä¸‹é¢è°ƒç”¨çš„ç¬¬äºŒä¸ªå‚æ•°ï¼Œæ ¹æ®å‰é¢è·å–åˆ°çš„æ˜¯ SSDT æŒ‡é’ˆï¼ŒSSDTï¼Œè¿˜æ˜¯ KiServiceTableï¼Œæ¥ä¼ å…¥ç›¸åº”çš„å®å‚
+	// æ­¤å¤„æŠŠ KiServiceTableï¼Œä»¥åŠç³»ç»ŸæœåŠ¡æŒ‡é’ˆè¡¨ï¼Œç”± os_ki_service_table å˜é‡ä¿å­˜ï¼Œæ˜ å°„åˆ°å¦ä¸€ä¸ªå†…æ ¸åœ°å€å¤„
 	mapped_ki_service_table = MapMdl(mdl_ptr, (PVOID)os_ki_service_table,  0x191 * 4);
 
 	if (mapped_ki_service_table == NULL) {
 
-		DBG_TRACE("Driver Entry", ".........ÎŞ·¨·ÖÅä MDL À´ÃèÊö OS µÄ SSDT£¬²¢°ÑËüÓ³Éäµ½ÁíÒ»¸öÄÚºËµØÖ·¶ÔÆä¹Ò¹³ºÍĞŞ¸Ä.......");
+		DBG_TRACE("Driver Entry", ".........æ— æ³•åˆ†é… MDL æ¥æè¿° OS çš„ SSDTï¼Œå¹¶æŠŠå®ƒæ˜ å°„åˆ°å¦ä¸€ä¸ªå†…æ ¸åœ°å€å¯¹å…¶æŒ‚é’©å’Œä¿®æ”¹.......");
 	}
 
 	
-	DbgPrint("ÎÒÃÇ°ÑÔ­Ê¼µÄ OS ÏµÍ³·şÎñÖ¸Õë±íÒÔĞ´È¨ÏŞÓ³Éäµ½µÄĞÂÄÚºË¿Õ¼äÎª:   %p\r\n", mapped_ki_service_table);
-	DbgPrint("½âÒıÕâ¸öĞÂÄÚºËµØÖ·£¬Ó¦¸Ã¾ÍÊÇ±íÖĞµÄµÚÒ»¸öÏµÍ³·şÎñµÄµØÖ·£¬»òÕßÓÃµ÷ÊÔÆ÷ÃüÁî !dps ¼ì²éÁ½ÕßÊÇ·ñÎªÍ¬Ò»ÕÅµ÷ÓÃ±í:   %p\r\n", *mapped_ki_service_table);
+	DbgPrint("æˆ‘ä»¬æŠŠåŸå§‹çš„ OS ç³»ç»ŸæœåŠ¡æŒ‡é’ˆè¡¨ä»¥å†™æƒé™æ˜ å°„åˆ°çš„æ–°å†…æ ¸ç©ºé—´ä¸º:   %p\r\n", mapped_ki_service_table);
+	DbgPrint("è§£å¼•è¿™ä¸ªæ–°å†…æ ¸åœ°å€ï¼Œåº”è¯¥å°±æ˜¯è¡¨ä¸­çš„ç¬¬ä¸€ä¸ªç³»ç»ŸæœåŠ¡çš„åœ°å€ï¼Œæˆ–è€…ç”¨è°ƒè¯•å™¨å‘½ä»¤ !dps æ£€æŸ¥ä¸¤è€…æ˜¯å¦ä¸ºåŒä¸€å¼ è°ƒç”¨è¡¨:   %p\r\n", *mapped_ki_service_table);
 
 		
-//0x39 ºÅÏµÍ³·şÎñÎª nt!NtCompleteConnectPort() £¬ÒòÎªËüÖ»ÓĞÒ»¸ö²ÎÊı£¬¶øÇÒÊÇÎÄµµ»¯µÄ£¬ËùÒÔ½ÏÒ× hook ²¢ÖØ¶¨Ïò
+//0x39 å·ç³»ç»ŸæœåŠ¡ä¸º nt!NtCompleteConnectPort() ï¼Œå› ä¸ºå®ƒåªæœ‰ä¸€ä¸ªå‚æ•°ï¼Œè€Œä¸”æ˜¯æ–‡æ¡£åŒ–çš„ï¼Œæ‰€ä»¥è¾ƒæ˜“ hook å¹¶é‡å®šå‘
 
 	ori_sys_service_ptr = mapped_ki_service_table[0x39];
 
 	mapped_ki_service_table[0x39] = our_hooking_routine;
 
-	DbgPrint("ÎÒÃÇ°Ñ 0x39 ºÅÏµÍ³·şÎñ¹Ò¹³Îª:   %p\r\n", mapped_ki_service_table[0x39]);
+	DbgPrint("æˆ‘ä»¬æŠŠ 0x39 å·ç³»ç»ŸæœåŠ¡æŒ‚é’©ä¸º:   %p\r\n", mapped_ki_service_table[0x39]);
 
 	/*
 	//RtlFillMemory(mapped_ki_service_table, 0x4, (UCHAR)'S');
-	//DbgPrint("ÀûÓÃ RtlFillMemory() °ÑµÚÒ»¸öÏµÍ³·şÎñº¯ÊıµÄµØÖ·Ìî³äÎªÈ«¡°Z¡±:   %p\r\n", *mapped_ki_service_table);
+	//DbgPrint("åˆ©ç”¨ RtlFillMemory() æŠŠç¬¬ä¸€ä¸ªç³»ç»ŸæœåŠ¡å‡½æ•°çš„åœ°å€å¡«å……ä¸ºå…¨â€œZâ€:   %p\r\n", *mapped_ki_service_table);
 	*/
 
 
@@ -175,21 +181,21 @@ PVOID  MapMdl(PMDL  mdl_pointer,  PVOID  VirtualAddress,  ULONG  Length) {
 		//PVOID  mapped_addr2;
 		// PVOID  mapped_addr3;
 
-		// ´òÓ¡ os_SSDT_ptr ±¾Éí£¨KHTREAD µÄ ServiceTable ×Ö¶Î£©µÄµØÖ·
-		DbgPrint(" _KTHREAD.ServiceTable ×ÔÉíµÄµØÖ·:   %p\r\n", &os_SSDT_ptr);
-		DbgPrint(" ServiceTable Ö¸Ïò:   %p\r\n", os_SSDT_ptr);
-		DbgPrint(" ServiceTable ËùÖ¸´¦µÄÄÚÈİ:   %p\r\n", *os_SSDT_ptr);
-		DbgPrint(" SSDT£¬Òà¼´ nt!KeServiceDescriptorTable µØÖ·£¬Óë ServiceTable ËùÖ¸´¦ÄÚÈİÒ»ÖÂ: %p\r\n", os_SSDT);
+		// æ‰“å° os_SSDT_ptr æœ¬èº«ï¼ˆKHTREAD çš„ ServiceTable å­—æ®µï¼‰çš„åœ°å€
+		DbgPrint(" _KTHREAD.ServiceTable è‡ªèº«çš„åœ°å€:   %p\r\n", &os_SSDT_ptr);
+		DbgPrint(" ServiceTable æŒ‡å‘:   %p\r\n", os_SSDT_ptr);
+		DbgPrint(" ServiceTable æ‰€æŒ‡å¤„çš„å†…å®¹:   %p\r\n", *os_SSDT_ptr);
+		DbgPrint(" SSDTï¼Œäº¦å³ nt!KeServiceDescriptorTable åœ°å€ï¼Œä¸ ServiceTable æ‰€æŒ‡å¤„å†…å®¹ä¸€è‡´: %p\r\n", os_SSDT);
 
-	// ´òÓ¡ÏµÍ³·şÎñÀı³ÌÖ¸Õë±íµÄµØÖ·£¬¿ÉÒÔÍ¨¹ı MDL + MmProbeAndLockPages()£¬°ÑÏµÍ³·şÎñÀı³ÌÖ¸Õë±íÒÔ¿ÉĞ´µÄĞÎÊ½Ó³Éäµ½
-	//SystemPTE ÀàĞÍµÄÄÚºË¿Õ¼ä£¬È»ºó³¢ÊÔ¶ÔÓ³Éäµ½µÄµØÖ·Ö´ĞĞ RtlZeroMemory() Ö®ÀàµÄ²Ù×÷£¬¿´ÊÇ·ñ»á¸Ä±äÔ­Ê¼µÄ KiServiceTable ¡£
-	// »¹¿ÉÒÔÓÃ !pte ÃüÁîÀ´Ö¤Êµ MDL + MmProbeAndLockPages() Ó³Éäµ½µÄĞéÄâµØÖ·¶ÔÓ¦µÄÎïÀíÒ³Îª¿ÉĞ´
-	// ×¢Òâ£¬Ó¦¸Ã¶Ô KiServiceTable Ö¤Êµ£¬ÒòÎª SSDT µÄÔ­Ê¼×´Ì¬¾ÍÊÇ¿ÉĞ´µÄ
-		DbgPrint(" nt!KeServiceDescriptorTable ËùÖ¸´¦µÄÄÚÈİ:   %X\r\n", *os_SSDT);
-		DbgPrint(" KiServiceTable µØÖ·£¬ÓëÉÏÃæÒ»ÖÂ:   %X\r\n", os_ki_service_table);
-		DBG_TRACE("MapMdl", ".......±íÖĞµÄÏµÍ³·şÎñµØÖ·¿ÉÒÔÍ¨¹ı dps ×ª´¢ os_ki_service_table ²é¿´£¡..........r\n");
+	// æ‰“å°ç³»ç»ŸæœåŠ¡ä¾‹ç¨‹æŒ‡é’ˆè¡¨çš„åœ°å€ï¼Œå¯ä»¥é€šè¿‡ MDL + MmProbeAndLockPages()ï¼ŒæŠŠç³»ç»ŸæœåŠ¡ä¾‹ç¨‹æŒ‡é’ˆè¡¨ä»¥å¯å†™çš„å½¢å¼æ˜ å°„åˆ°
+	//SystemPTE ç±»å‹çš„å†…æ ¸ç©ºé—´ï¼Œç„¶åå°è¯•å¯¹æ˜ å°„åˆ°çš„åœ°å€æ‰§è¡Œ RtlZeroMemory() ä¹‹ç±»çš„æ“ä½œï¼Œçœ‹æ˜¯å¦ä¼šæ”¹å˜åŸå§‹çš„ KiServiceTable ã€‚
+	// è¿˜å¯ä»¥ç”¨ !pte å‘½ä»¤æ¥è¯å® MDL + MmProbeAndLockPages() æ˜ å°„åˆ°çš„è™šæ‹Ÿåœ°å€å¯¹åº”çš„ç‰©ç†é¡µä¸ºå¯å†™
+	// æ³¨æ„ï¼Œåº”è¯¥å¯¹ KiServiceTable è¯å®ï¼Œå› ä¸º SSDT çš„åŸå§‹çŠ¶æ€å°±æ˜¯å¯å†™çš„
+		DbgPrint(" nt!KeServiceDescriptorTable æ‰€æŒ‡å¤„çš„å†…å®¹:   %X\r\n", *os_SSDT);
+		DbgPrint(" KiServiceTable åœ°å€ï¼Œä¸ä¸Šé¢ä¸€è‡´:   %X\r\n", os_ki_service_table);
+		DBG_TRACE("MapMdl", ".......è¡¨ä¸­çš„ç³»ç»ŸæœåŠ¡åœ°å€å¯ä»¥é€šè¿‡ dps è½¬å‚¨ os_ki_service_table æŸ¥çœ‹ï¼..........r\n");
 
-	// Èç¹ûÄÜÈ·¶¨ÒªÓ³ÉäµÄ»º³åÇøÔÚ·Ç»»Ò³³ØÖĞ£¬¾ÍÎŞĞèµ÷ÓÃºóÃæµÄ MmProbeAndLockPages()£¬Ò²¾ÍÓÃ²»ÉÏ try......except Âß¼­¿é
+	// å¦‚æœèƒ½ç¡®å®šè¦æ˜ å°„çš„ç¼“å†²åŒºåœ¨éæ¢é¡µæ± ä¸­ï¼Œå°±æ— éœ€è°ƒç”¨åé¢çš„ MmProbeAndLockPages()ï¼Œä¹Ÿå°±ç”¨ä¸ä¸Š try......except é€»è¾‘å—
 
 		try {
 
@@ -197,17 +203,17 @@ PVOID  MapMdl(PMDL  mdl_pointer,  PVOID  VirtualAddress,  ULONG  Length) {
 
 			if (mdl_pointer == NULL) {
 
-				DBG_TRACE("MapMdl", ".........ÎŞ·¨·ÖÅäÒ»¸ö MDL À´ÃèÊöÔ­Ê¼µÄ KiServiceTable £¡..........\r\n");
+				DBG_TRACE("MapMdl", ".........æ— æ³•åˆ†é…ä¸€ä¸ª MDL æ¥æè¿°åŸå§‹çš„ KiServiceTable ï¼..........\r\n");
 				return  NULL;
 			}
 
-			DbgPrint("·ÖÅäµÄ MDL Ö¸Õë×ÔÉíµÄµØÖ·:  %p £¬¿ÉÓÃ dd ×ª´¢Ëü³ÖÓĞµÄµØÖ·\r\n", &mdl_pointer);
-			DbgPrint("·ÖÅäµÄ MDL Ö¸ÕëÖ¸ÏòÒ»¸ö _MDL µÄµØÖ·:   %p£¬Óë dd %p µÄÊä³öÒ»ÖÂ£¬ËüÓÃÀ´ÃèÊöÔ­Ê¼µÄ KiServiceTable\r\n", mdl_pointer, &mdl_pointer);
+			DbgPrint("åˆ†é…çš„ MDL æŒ‡é’ˆè‡ªèº«çš„åœ°å€:  %p ï¼Œå¯ç”¨ dd è½¬å‚¨å®ƒæŒæœ‰çš„åœ°å€\r\n", &mdl_pointer);
+			DbgPrint("åˆ†é…çš„ MDL æŒ‡é’ˆæŒ‡å‘ä¸€ä¸ª _MDL çš„åœ°å€:   %pï¼Œä¸ dd %p çš„è¾“å‡ºä¸€è‡´ï¼Œå®ƒç”¨æ¥æè¿°åŸå§‹çš„ KiServiceTable\r\n", mdl_pointer, &mdl_pointer);
 
-			//°Ñ·ÖÅäµÄ MDL Ö¸Õë±¸·İÆğÀ´£¬ÒòÎª MmGetSystemAddressForMdlSafe() µ÷ÓÃ»á°Ñ´«¸øËüµÄ MDL Ö¸ÕëÖ¸ÏòÆäËüÏµÍ³Êı¾İ
+			//æŠŠåˆ†é…çš„ MDL æŒ‡é’ˆå¤‡ä»½èµ·æ¥ï¼Œå› ä¸º MmGetSystemAddressForMdlSafe() è°ƒç”¨ä¼šæŠŠä¼ ç»™å®ƒçš„ MDL æŒ‡é’ˆæŒ‡å‘å…¶å®ƒç³»ç»Ÿæ•°æ®
 			backup_mdl_ptr = mdl_pointer;
 
-			// ÕâÀïÉèÖÃµÄÁ½¸ö¶ÏµãÊÇÎªÁË¹Û²ìµ÷ÓÃÇ°ºóµÄ _MDL.MdlFlags ÈçºÎ±ä»¯
+			// è¿™é‡Œè®¾ç½®çš„ä¸¤ä¸ªæ–­ç‚¹æ˜¯ä¸ºäº†è§‚å¯Ÿè°ƒç”¨å‰åçš„ _MDL.MdlFlags å¦‚ä½•å˜åŒ–
 			__asm { 
 
 				int 3;
@@ -215,7 +221,7 @@ PVOID  MapMdl(PMDL  mdl_pointer,  PVOID  VirtualAddress,  ULONG  Length) {
 
 			if (mdl_pointer->MdlFlags & MDL_ALLOCATED_FIXED_SIZE)
 			{
-				DBG_TRACE("MapMdl", ".....IoAllocateMdl() ·ÖÅäµÄ MDL ½á¹¹ÓĞ¹Ì¶¨´óĞ¡£¨MDL_ALLOCATED_FIXED_SIZE£©........\r\n");
+				DBG_TRACE("MapMdl", ".....IoAllocateMdl() åˆ†é…çš„ MDL ç»“æ„æœ‰å›ºå®šå¤§å°ï¼ˆMDL_ALLOCATED_FIXED_SIZEï¼‰........\r\n");
 			}
 
 			MmProbeAndLockPages(mdl_pointer, KernelMode, IoWriteAccess);
@@ -229,16 +235,16 @@ PVOID  MapMdl(PMDL  mdl_pointer,  PVOID  VirtualAddress,  ULONG  Length) {
 				(mdl_pointer->MdlFlags & MDL_WRITE_OPERATION) &&
 				(mdl_pointer->MdlFlags & MDL_PAGES_LOCKED))
 			{
-				DBG_TRACE("MapMdl", " MmProbeAndLockPages() ÒÔĞ´È¨ÏŞ£¨MDL_WRITE_OPERATION£©°Ñ MDL ÃèÊöµÄÔ­Ê¼ KiServiceTable ËùÔÚÒ³ÃæËø¶¨µ½ÎïÀíÄÚ´æÖĞ£¨MDL_PAGES_LOCKED£©\r\n");
+				DBG_TRACE("MapMdl", " MmProbeAndLockPages() ä»¥å†™æƒé™ï¼ˆMDL_WRITE_OPERATIONï¼‰æŠŠ MDL æè¿°çš„åŸå§‹ KiServiceTable æ‰€åœ¨é¡µé¢é”å®šåˆ°ç‰©ç†å†…å­˜ä¸­ï¼ˆMDL_PAGES_LOCKEDï¼‰\r\n");
 			}
 			
-			/*Ç°ºó·Ö±ğÉèÖÃÒ»¸ö¶Ïµã£¬ÑéÖ¤ MmGetSystemAddressForMdlSafe() ÊÇ·ñ°Ñ MDL ÊÍ·ÅÁË¡£¡£¡£¡£
-			¾­ÑéÖ¤£¬MmGetSystemAddressForMdlSafe() »á°Ñ MDL Ö¸ÏòÆäËüÏµÍ³Êı¾İ£¬¶ø·ÇÊÍ·ÅËüÖ¸ÏòµÄ _MDL ½á¹¹£¬Òò´Ë MmGetSystemAddressForMdlSafe()
-			µ÷ÓÃºóÎŞ·¨ÒÀ¿¿¼ì²é MDL Ö¸ÕëÊÇ·ñÎª¿ÕÀ´¶ÏÑÔ _MDL ½á¹¹ÊÇ·ñ±»ÊÍ·Å*/
+			/*å‰ååˆ†åˆ«è®¾ç½®ä¸€ä¸ªæ–­ç‚¹ï¼ŒéªŒè¯ MmGetSystemAddressForMdlSafe() æ˜¯å¦æŠŠ MDL é‡Šæ”¾äº†ã€‚ã€‚ã€‚ã€‚
+			ç»éªŒè¯ï¼ŒMmGetSystemAddressForMdlSafe() ä¼šæŠŠ MDL æŒ‡å‘å…¶å®ƒç³»ç»Ÿæ•°æ®ï¼Œè€Œéé‡Šæ”¾å®ƒæŒ‡å‘çš„ _MDL ç»“æ„ï¼Œå› æ­¤ MmGetSystemAddressForMdlSafe()
+			è°ƒç”¨åæ— æ³•ä¾é æ£€æŸ¥ MDL æŒ‡é’ˆæ˜¯å¦ä¸ºç©ºæ¥æ–­è¨€ _MDL ç»“æ„æ˜¯å¦è¢«é‡Šæ”¾*/
 
 			mapped_addr = MmGetSystemAddressForMdlSafe(mdl_pointer, NormalPagePriority);
 
-			// ´Ë´¦Ë³±ã¹Û²ì _MDL.MdlFlags µÄ±ä»¯
+			// æ­¤å¤„é¡ºä¾¿è§‚å¯Ÿ _MDL.MdlFlags çš„å˜åŒ–
 			__asm {
 
 				int 3;
@@ -251,48 +257,48 @@ PVOID  MapMdl(PMDL  mdl_pointer,  PVOID  VirtualAddress,  ULONG  Length) {
 				(mdl_pointer->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
 				)
 			{
-				DBG_TRACE("MapMdl", " MmGetSystemAddressForMdlSafe() °Ñ MDL ½á¹¹ÃèÊöµÄÔ­Ê¼ KiServiceTable Ó³Éäµ½ÁíÒ»¸öÄÚºËĞéÄâµØÖ·£¨MDL_MAPPED_TO_SYSTEM_VA£©\r\n");
+				DBG_TRACE("MapMdl", " MmGetSystemAddressForMdlSafe() æŠŠ MDL ç»“æ„æè¿°çš„åŸå§‹ KiServiceTable æ˜ å°„åˆ°å¦ä¸€ä¸ªå†…æ ¸è™šæ‹Ÿåœ°å€ï¼ˆMDL_MAPPED_TO_SYSTEM_VAï¼‰\r\n");
 			}
 
 
-			DbgPrint("MmGetSystemAddressForMdlSafe() µ÷ÓÃÒÀÈ»¿ÉÒÔÍ¨¹ıÔ­Ê¼µÄ MDL Ö¸Õë·ÃÎÊ _MDL µÄµØÖ·:   %p\r\n", mdl_pointer);
-			DbgPrint("Ò²¿ÉÒÔÍ¨¹ı±¸·İµÄ MDL Ö¸Õë·ÃÎÊ _MDL µÄµØÖ·:   %p£¬Õâ¶¼ËµÃ÷ MDL ½á¹¹ÉĞÎ´±»ÊÍ·Å£¬\r\n", backup_mdl_ptr);
+			DbgPrint("MmGetSystemAddressForMdlSafe() è°ƒç”¨ä¾ç„¶å¯ä»¥é€šè¿‡åŸå§‹çš„ MDL æŒ‡é’ˆè®¿é—® _MDL çš„åœ°å€:   %p\r\n", mdl_pointer);
+			DbgPrint("ä¹Ÿå¯ä»¥é€šè¿‡å¤‡ä»½çš„ MDL æŒ‡é’ˆè®¿é—® _MDL çš„åœ°å€:   %pï¼Œè¿™éƒ½è¯´æ˜ MDL ç»“æ„å°šæœªè¢«é‡Šæ”¾ï¼Œ\r\n", backup_mdl_ptr);
 
 			
 			pfn_array_follow_mdl = (PPFN_NUMBER)(mdl_pointer + 1);
 
 			
-			DbgPrint(" MDL ½á¹¹ºóÆ«ÒÆ %2x µØÖ·´¦ÊÇÒ»¸ö PFN Êı×é£¬ÓÃÀ´´æ´¢¸Ã MDL ÃèÊöµÄĞéÄâ»º³åÇøÓ³Éäµ½µÄÎïÀíÒ³¿òºÅ\r\n", mdl_header_length);
-			DbgPrint(" ¸Ã PFN Êı×éµÄÆğÊ¼µØÖ·Îª£º%p\r\n", pfn_array_follow_mdl);
-			DbgPrint(" µÚÒ»¸öÎïÀíÒ³¿òºÅÎª£º%p\r\n", *pfn_array_follow_mdl);
+			DbgPrint(" MDL ç»“æ„ååç§» %2x åœ°å€å¤„æ˜¯ä¸€ä¸ª PFN æ•°ç»„ï¼Œç”¨æ¥å­˜å‚¨è¯¥ MDL æè¿°çš„è™šæ‹Ÿç¼“å†²åŒºæ˜ å°„åˆ°çš„ç‰©ç†é¡µæ¡†å·\r\n", mdl_header_length);
+			DbgPrint(" è¯¥ PFN æ•°ç»„çš„èµ·å§‹åœ°å€ä¸ºï¼š%p\r\n", pfn_array_follow_mdl);
+			DbgPrint(" ç¬¬ä¸€ä¸ªç‰©ç†é¡µæ¡†å·ä¸ºï¼š%p\r\n", *pfn_array_follow_mdl);
 			
 
-				/*´òÓ¡Ç°Ãæµ÷ÓÃ·µ»ØµÄµØÖ·£¬ËüÊä³ö Mdl °ÑÔ­Ê¼µÄ os_SSDT_ptr Ó³Éäµ½µÄÁíÒ»¸öÄÚºËµØÖ·£»¾¡¹ÜÈç´Ë£¬
-				ÔÚ kd.exe ÖĞ×ª´¢ os_SSDT_ptr Óë mapped_addr£¬Ó¦¸ÃµÃ³öÏàÍ¬µÄÄÚÈİ£¬±íÃ÷ËüÃÇ¶¼Ö¸Ïò SSDT¡£
-×¢Òâ£¬MmProbeAndLockPages() µ÷ÓÃ»á¼ÙÉè mdl ÃèÊöµÄ»º³åÇøÔÚ¿É»»Ò³³ØÖĞ£¬²¢ÇÒ½«ÆäËø¶¨£¬Ç°ÃæËµ¹ı£¬
- IoAllocateMdl() ²»»á³õÊ¼»¯ MDL ºóÃæµÄ PFN Êı×é£¬¼ÙÉèÖ±½Ó°´ÕÕ IoAllocateMdl() -> MmGetSystemAddressForMdlSafe()
- È»ºó´òÓ¡£¬Æä os_SSDT_ptr Ó³Éäµ½µÄµØÖ·ÊÇ´íÎóµÄ£¬kd.exe ÎŞ·¨×ª´¢ÑéÖ¤£»Òò´ËĞèÒªÖ´ĞĞÏÂÃæÆäÖĞÖ®Ò»µÄÕıÈ·²½Öè£º
-1 ¡£ IoAllocateMdl() -> MmProbeAndLockPages() -> MmGetSystemAddressForMdlSafe() £¬ os_SSDT_ptr ±»Ó³Éäµ½ÁíÒ»¸ö
- ÄÚºËµØÖ·£¨mapped_addr ²»µÈÓÚ os_SSDT_ptr£©£¬µ«Í¬ÑùÖ¸Ïò SSDT
+				/*æ‰“å°å‰é¢è°ƒç”¨è¿”å›çš„åœ°å€ï¼Œå®ƒè¾“å‡º Mdl æŠŠåŸå§‹çš„ os_SSDT_ptr æ˜ å°„åˆ°çš„å¦ä¸€ä¸ªå†…æ ¸åœ°å€ï¼›å°½ç®¡å¦‚æ­¤ï¼Œ
+				åœ¨ kd.exe ä¸­è½¬å‚¨ os_SSDT_ptr ä¸ mapped_addrï¼Œåº”è¯¥å¾—å‡ºç›¸åŒçš„å†…å®¹ï¼Œè¡¨æ˜å®ƒä»¬éƒ½æŒ‡å‘ SSDTã€‚
+æ³¨æ„ï¼ŒMmProbeAndLockPages() è°ƒç”¨ä¼šå‡è®¾ mdl æè¿°çš„ç¼“å†²åŒºåœ¨å¯æ¢é¡µæ± ä¸­ï¼Œå¹¶ä¸”å°†å…¶é”å®šï¼Œå‰é¢è¯´è¿‡ï¼Œ
+ IoAllocateMdl() ä¸ä¼šåˆå§‹åŒ– MDL åé¢çš„ PFN æ•°ç»„ï¼Œå‡è®¾ç›´æ¥æŒ‰ç…§ IoAllocateMdl() -> MmGetSystemAddressForMdlSafe()
+ ç„¶åæ‰“å°ï¼Œå…¶ os_SSDT_ptr æ˜ å°„åˆ°çš„åœ°å€æ˜¯é”™è¯¯çš„ï¼Œkd.exe æ— æ³•è½¬å‚¨éªŒè¯ï¼›å› æ­¤éœ€è¦æ‰§è¡Œä¸‹é¢å…¶ä¸­ä¹‹ä¸€çš„æ­£ç¡®æ­¥éª¤ï¼š
+1 ã€‚ IoAllocateMdl() -> MmProbeAndLockPages() -> MmGetSystemAddressForMdlSafe() ï¼Œ os_SSDT_ptr è¢«æ˜ å°„åˆ°å¦ä¸€ä¸ª
+ å†…æ ¸åœ°å€ï¼ˆmapped_addr ä¸ç­‰äº os_SSDT_ptrï¼‰ï¼Œä½†åŒæ ·æŒ‡å‘ SSDT
 
-2¡£ IoAllocateMdl() -> MmBuildMdlForNonPagedPool() -> MmGetSystemAddressForMdlSafe()£¬ÒòÎª
-MmBuildMdlForNonPagedPool() ¼ÙÉè Mdl ÃèÊöµÄ os_SSDT_ptr ÒÑ¾­ÔÚ²»¿É»»Ò³³ØÖĞ£¬Ëü²»»á´´½¨¶îÍâµÄÄÚºËµØÖ·Ó³Éä£¬
- Òò´Ë mapped_addr2 ¾ÍµÈÓÚ os_SSDT_ptr
+2ã€‚ IoAllocateMdl() -> MmBuildMdlForNonPagedPool() -> MmGetSystemAddressForMdlSafe()ï¼Œå› ä¸º
+MmBuildMdlForNonPagedPool() å‡è®¾ Mdl æè¿°çš„ os_SSDT_ptr å·²ç»åœ¨ä¸å¯æ¢é¡µæ± ä¸­ï¼Œå®ƒä¸ä¼šåˆ›å»ºé¢å¤–çš„å†…æ ¸åœ°å€æ˜ å°„ï¼Œ
+ å› æ­¤ mapped_addr2 å°±ç­‰äº os_SSDT_ptr
 
-			¸ù¾İÇ°ÃæÎª MapMdl() µÄµÚ¶ş¸ö²ÎÊı´«ÈëµÄÊµ²Î£¬»»³É²»Í¬µÄ´òÓ¡ĞÅÏ¢
+			æ ¹æ®å‰é¢ä¸º MapMdl() çš„ç¬¬äºŒä¸ªå‚æ•°ä¼ å…¥çš„å®å‚ï¼Œæ¢æˆä¸åŒçš„æ‰“å°ä¿¡æ¯
 			DbgPrint("the MmGetSystemAddressForMdlSafe() mapping OS SSDT pointer to :   %p",  mapped_addr);
 
-	MmBuildMdlForNonPagedPool() Óë MmProbeAndLockPages()£¬MmMapLockedPagesSpecifyCache() 
-		²»¿ÉÍ¬Ê±Ê¹ÓÃ£»MmBuildMdlForNonPagedPool()
-		µÄ²ÎÊı mdl ±ØĞëÊÇ IoAllocateMdl() ´´½¨µÄ£¬ÃèÊö²»¿É»»Ò³³ØµÄ mdl£¬ÔÚ´Ë³¡¾°ÖĞ£¬mdl ÃèÊöµÄ ETHREAD ½á¹¹Ó¦¸ÃÎ»ÓÚ
-	²»¿É»»Ò³³ØÖĞ£»Ïò MmGetSystemAddressForMdlSafe() ´«ÈëÒ»¸öÓÉ MmBuildMdlForNonPagedPool() ¹¹½¨µÄ MDL ÊÇÔÊĞíµÄ¡£
-		ÔÚÕâÖÖÇé¿öÏÂ£¬MmGetSystemAddressForMdlSafe() µ÷ÓÃÖ»ÊÇ·µ»ØÓÉ¸Ã MDL ÃèÊöµÄ»º³åÇøµÄÆğÊ¼ĞéÄâµØÖ·¡£
+	MmBuildMdlForNonPagedPool() ä¸ MmProbeAndLockPages()ï¼ŒMmMapLockedPagesSpecifyCache() 
+		ä¸å¯åŒæ—¶ä½¿ç”¨ï¼›MmBuildMdlForNonPagedPool()
+		çš„å‚æ•° mdl å¿…é¡»æ˜¯ IoAllocateMdl() åˆ›å»ºçš„ï¼Œæè¿°ä¸å¯æ¢é¡µæ± çš„ mdlï¼Œåœ¨æ­¤åœºæ™¯ä¸­ï¼Œmdl æè¿°çš„ ETHREAD ç»“æ„åº”è¯¥ä½äº
+	ä¸å¯æ¢é¡µæ± ä¸­ï¼›å‘ MmGetSystemAddressForMdlSafe() ä¼ å…¥ä¸€ä¸ªç”± MmBuildMdlForNonPagedPool() æ„å»ºçš„ MDL æ˜¯å…è®¸çš„ã€‚
+		åœ¨è¿™ç§æƒ…å†µä¸‹ï¼ŒMmGetSystemAddressForMdlSafe() è°ƒç”¨åªæ˜¯è¿”å›ç”±è¯¥ MDL æè¿°çš„ç¼“å†²åŒºçš„èµ·å§‹è™šæ‹Ÿåœ°å€ã€‚
 				MmBuildMdlForNonPagedPool(mdl);
 				mapped_addr2 = MmGetSystemAddressForMdlSafe(mdl,  NormalPagePriority);
 
-	Í¨¹ı½«ÏÂÃæµÄ´òÓ¡½á¹ûÓëÉÏÒ»¸ö±È½Ï£¬¿ÉÒÔ¼ì²â MmBuildMdlForNonPagedPool() ÊÇ·ñ»áÎª os_SSDT_ptr ´´½¨¶îÍâµÄÓ³Éä£º
-	Èç¹û mapped_addr2 Óë mapped_addr ÏàÍ¬£¬Ôò²»»á¡£
-			½á¹ûÊÇ²»»á£¬MDL ÃèÊöµÄ»º³åÇøµÄÆğÊ¼ĞéÄâµØÖ·¾ÍÊÇÏß³ÌµÄ KTHREAD.ServiceTable ³ÉÔ±µØÖ·£©
+	é€šè¿‡å°†ä¸‹é¢çš„æ‰“å°ç»“æœä¸ä¸Šä¸€ä¸ªæ¯”è¾ƒï¼Œå¯ä»¥æ£€æµ‹ MmBuildMdlForNonPagedPool() æ˜¯å¦ä¼šä¸º os_SSDT_ptr åˆ›å»ºé¢å¤–çš„æ˜ å°„ï¼š
+	å¦‚æœ mapped_addr2 ä¸ mapped_addr ç›¸åŒï¼Œåˆ™ä¸ä¼šã€‚
+			ç»“æœæ˜¯ä¸ä¼šï¼ŒMDL æè¿°çš„ç¼“å†²åŒºçš„èµ·å§‹è™šæ‹Ÿåœ°å€å°±æ˜¯çº¿ç¨‹çš„ KTHREAD.ServiceTable æˆå‘˜åœ°å€ï¼‰
 			DbgPrint("the MmGetSystemAddressForMdlSafe() ->MmBuildMdlForNonPagedPool()  mapping OS SSDT pointer to :   %p",  mapped_addr2);
 			*/
 				
@@ -333,31 +339,31 @@ void  UnMapMdl(PMDL  mdl_pointer,  PVOID  baseaddr) {
 
 	if (mdl_pointer != backup_mdl_ptr) {
 
-		DBG_TRACE("UnMapMdl", ".......ÏÈ½âËø±¸·İ MDL Ó³ÉäµÄÒ³Ãæ£¬È»ºóÊÍ·Å±¸·İµÄ MDL........");
+		DBG_TRACE("UnMapMdl", ".......å…ˆè§£é”å¤‡ä»½ MDL æ˜ å°„çš„é¡µé¢ï¼Œç„¶åé‡Šæ”¾å¤‡ä»½çš„ MDL........");
 
-		MmUnlockPages(backup_mdl_ptr);	// ´ËÀı³ÌµÄĞ§¹ûÊÇ£¬ÎŞ·¨Í¨¹ıÓ³ÉäµÄÏµÍ³µØÖ·À´·ÃÎÊ KiServiceTable£¬ÇÒ _MDL ½á¹¹ÖĞ¸÷×Ö¶ÎÒÑ·¢Éú±ä»¯£¬
-		IoFreeMdl(backup_mdl_ptr);		// ´ËÀı³ÌµÄĞ§¹ûÊÇ£¬MDL Ö¸Õë²»ÔÙ³ÖÓĞ _MDL ½á¹¹µÄµØÖ·
+		MmUnlockPages(backup_mdl_ptr);	// æ­¤ä¾‹ç¨‹çš„æ•ˆæœæ˜¯ï¼Œæ— æ³•é€šè¿‡æ˜ å°„çš„ç³»ç»Ÿåœ°å€æ¥è®¿é—® KiServiceTableï¼Œä¸” _MDL ç»“æ„ä¸­å„å­—æ®µå·²å‘ç”Ÿå˜åŒ–ï¼Œ
+		IoFreeMdl(backup_mdl_ptr);		// æ­¤ä¾‹ç¨‹çš„æ•ˆæœæ˜¯ï¼ŒMDL æŒ‡é’ˆä¸å†æŒæœ‰ _MDL ç»“æ„çš„åœ°å€
 
 
 		if (backup_mdl_ptr == NULL) {
 
-			DBG_TRACE("UnMapMdl", ".............½âËøÒ³Ãæ£¬ÊÍ·Å±¸·İ MDL Íê³É£¡................");
+			DBG_TRACE("UnMapMdl", ".............è§£é”é¡µé¢ï¼Œé‡Šæ”¾å¤‡ä»½ MDL å®Œæˆï¼................");
 		}
 
 		return;
 	}
 
 
-	DBG_TRACE("UnMapMdl", ".........Ô­Ê¼ MDL Î´±»ĞŞ¸Ä£¬½âËøËüÓ³ÉäµÄÒ³ÃæºóÊÍ·ÅËü...........");
+	DBG_TRACE("UnMapMdl", ".........åŸå§‹ MDL æœªè¢«ä¿®æ”¹ï¼Œè§£é”å®ƒæ˜ å°„çš„é¡µé¢åé‡Šæ”¾å®ƒ...........");
 		
-		// Èç¹ûÇ°ÃæÊ¹ÓÃ MmBuildMdlForNonPagedPool() £¬¾Í²»ÄÜÖ´ĞĞÏÂÃæÇ°2¸ö²Ù×÷
+		// å¦‚æœå‰é¢ä½¿ç”¨ MmBuildMdlForNonPagedPool() ï¼Œå°±ä¸èƒ½æ‰§è¡Œä¸‹é¢å‰2ä¸ªæ“ä½œ
 		//MmUnmapLockedPages(baseaddr,  mdl);
 	MmUnlockPages(mdl_pointer);
 	IoFreeMdl(mdl_pointer);
 
 	if (mdl_pointer == NULL) {
 
-		DBG_TRACE("UnMapMdl", ".............½âËøÒ³Ãæ£¬ÊÍ·ÅÔ­Ê¼ MDL Íê³É£¡................");
+		DBG_TRACE("UnMapMdl", ".............è§£é”é¡µé¢ï¼Œé‡Šæ”¾åŸå§‹ MDL å®Œæˆï¼................");
 	}
 
 	return;
