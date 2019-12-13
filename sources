@@ -1,0 +1,8 @@
+TARGETNAME=hideprocess
+TARGETPATH=.
+
+TARGETTYPE=DRIVER
+
+
+SOURCES=kmd_hide_process_with_name.c
+AMD64_SOURCES=AMD64\lib.asm
