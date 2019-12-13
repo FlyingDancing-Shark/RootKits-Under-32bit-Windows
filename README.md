@@ -1,3 +1,3 @@
 # implementing those malwares running inside the 32-bit Windows kernel mode.
 # come with various functionality, such as kernel-level process hiding, hook SSDT (system service descriptor table)/device driver stack.......
-# NOTE that some feature doesn't work due to the Patch-Guard defense  introduced on 64-bit Windows, or didn't implement a basic synchronization mechanism using spin-lock to access global OS resource, and will cause BSOD ( or simply "bug check") .
+# NOTE that some feature doesn't work due to the Patch-Guard defense  introduced on 64-bit Windows, or didn't implement a basic synchronization mechanism using spin-lock to access global OS resources, and will cause BSOD ( or simply "bug check") .
