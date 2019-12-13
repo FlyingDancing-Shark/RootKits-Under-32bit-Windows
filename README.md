@@ -1,1 +1,1 @@
-# RootKit-Under-32bit-Windows
+# implementing those malwares running inside the 32-bit Windows kernel mode.
